@@ -1,14 +1,20 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "mithila-bazar",
+  "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "build": "next build",
     "db:check": "node scripts/check-tables.js",
     "db:setup": "node scripts/run-schema.js",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "postbuild": "echo 'Build completed successfully'",
+    "start": "next start",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

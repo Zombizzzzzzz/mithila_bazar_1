@@ -98,7 +98,8 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error setting up admins:', error)
-    return NextResponse.json({ error: 'Failed to setup admins: ' + error.message }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: 'Failed to setup admins: ' + errorMessage }, { status: 500 })
   }
 }
 
@@ -199,6 +200,7 @@ export async function POST() {
     })
   } catch (error) {
     console.error('Error setting up admins:', error)
-    return NextResponse.json({ error: 'Failed to setup admins: ' + error.message }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: 'Failed to setup admins: ' + errorMessage }, { status: 500 })
   }
 }
