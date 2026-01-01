@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Navbar } from "@/components/navbar"
 import { CategoryNav } from "@/components/category-nav"
 import { Footer } from "@/components/footer"
+import SessionProviderClient from '@/components/auth/session-provider-client'
 import "./globals.css"
 
 const inter = Inter({
@@ -52,13 +53,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} font-sans antialiased pb-20 md:pb-0`}>
-        <ThemeProvider>
-          <Navbar />
-          <CategoryNav />
-          {children}
-          <Footer />
-          <Analytics />
-        </ThemeProvider>
+        <SessionProviderClient>
+          <ThemeProvider>
+            <Navbar />
+            <CategoryNav />
+            {children}
+            <Footer />
+            <Analytics />
+          </ThemeProvider>
+        </SessionProviderClient>
       </body>
     </html>
   )

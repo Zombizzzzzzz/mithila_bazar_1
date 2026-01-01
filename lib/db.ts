@@ -28,6 +28,7 @@ export interface Product {
 export interface Order {
   id: number
   product_id: number
+  customer_id?: number
   customer_name: string
   customer_phone: string
   delivery_address: string
@@ -40,6 +41,14 @@ export interface Order {
   product_name?: string
   product_slug?: string
   product_image?: string
+}
+
+export interface Customer {
+  id: number
+  email: string
+  name: string | null
+  image_url: string | null
+  created_at: Date
 }
 
 export interface Category {
@@ -145,6 +154,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
 export async function createOrder(orderData: {
   product_id: number
+  customer_id?: number
   customer_name: string
   customer_phone: string
   delivery_address: string
@@ -154,8 +164,17 @@ export async function createOrder(orderData: {
 }): Promise<Order | null> {
   try {
     const orders = await sql`
-      INSERT INTO orders (product_id, customer_name, customer_phone, delivery_address, delivery_city, quantity, total_amount)
-      VALUES (${orderData.product_id}, ${orderData.customer_name}, ${orderData.customer_phone}, ${orderData.delivery_address}, ${orderData.delivery_city}, ${orderData.quantity}, ${orderData.total_amount})
+      INSERT INTO orders (product_id, customer_id, customer_name, customer_phone, delivery_address, delivery_city, quantity, total_amount)
+      VALUES (
+        ${orderData.product_id},
+        ${orderData.customer_id ?? null},
+        ${orderData.customer_name},
+        ${orderData.customer_phone},
+        ${orderData.delivery_address},
+        ${orderData.delivery_city},
+        ${orderData.quantity},
+        ${orderData.total_amount}
+      )
       RETURNING *
     `
     return orders[0] as Order
@@ -181,6 +200,53 @@ export async function getOrders(): Promise<(Order & { product_name?: string; pro
   } catch (error) {
     console.error("[v0] Error fetching orders:", error)
     return []
+  }
+}
+
+export async function getOrdersByCustomer(customerId: number): Promise<(Order & { product_name?: string; product_slug?: string; product_image?: string })[]> {
+  try {
+    const orders = await sql`
+      SELECT
+        o.*,
+        p.name as product_name,
+        p.slug as product_slug,
+        p.image_url as product_image
+      FROM orders o
+      JOIN products p ON o.product_id = p.id
+      WHERE o.customer_id = ${customerId}
+      ORDER BY o.created_at DESC
+    `
+    return orders as (Order & { product_name?: string; product_slug?: string; product_image?: string })[]
+  } catch (error) {
+    console.error("[v0] Error fetching customer orders:", error)
+    return []
+  }
+}
+
+export async function createOrUpdateCustomer(email: string, name?: string | null, image_url?: string | null): Promise<Customer | null> {
+  try {
+    const customers = await sql`
+      INSERT INTO customers (email, name, image_url)
+      VALUES (${email}, ${name ?? null}, ${image_url ?? null})
+      ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, image_url = EXCLUDED.image_url
+      RETURNING *
+    `
+    return customers[0] as Customer
+  } catch (error) {
+    console.error('[v0] Error creating/updating customer:', error)
+    return null
+  }
+}
+
+export async function getCustomerByEmail(email: string): Promise<Customer | null> {
+  try {
+    const customers = await sql`
+      SELECT * FROM customers WHERE email = ${email} LIMIT 1
+    `
+    return customers.length > 0 ? (customers[0] as Customer) : null
+  } catch (error) {
+    console.error('[v0] Error fetching customer by email:', error)
+    return null
   }
 }
 

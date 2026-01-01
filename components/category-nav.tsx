@@ -2,6 +2,7 @@ import Link from "next/link"
 import { getCategories } from "@/lib/db"
 import { Package, Sparkles, Watch, Shirt } from "lucide-react"
 import { GlobalSearch } from "@/components/global-search"
+import ClientAuth from '@/components/auth/client-auth'
 
 const categoryIcons = {
   electronics: Package,
@@ -25,7 +26,8 @@ export async function CategoryNav() {
       {/* Category Navigation */}
       <div className="sticky top-16 z-40 hidden border-b border-border/40 bg-card/50 backdrop-blur md:block">
         <div className="container mx-auto px-4">
-          <nav className="flex items-center justify-center gap-8 py-4">
+          <div className="flex items-center justify-between py-4">
+            <nav className="flex-1 flex items-center justify-center gap-8">
             {categories.map((category) => {
               const Icon = categoryIcons[category.slug as keyof typeof categoryIcons]
               return (
@@ -43,7 +45,11 @@ export async function CategoryNav() {
                 </Link>
               )
             })}
-          </nav>
+            </nav>
+            <div className="ml-4">
+              <ClientAuth />
+            </div>
+          </div>
         </div>
       </div>
 

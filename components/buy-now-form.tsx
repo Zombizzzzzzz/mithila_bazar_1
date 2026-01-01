@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +20,7 @@ interface BuyNowFormProps {
 
 export function BuyNowForm({ productId, productName, price, stock }: BuyNowFormProps) {
   const router = useRouter()
+  const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     customer_name: '',
@@ -30,6 +32,11 @@ export function BuyNowForm({ productId, productName, price, stock }: BuyNowFormP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!session) {
+      signIn()
+      return
+    }
 
     if (formData.quantity > stock) {
       toast.error('Not enough stock available')
@@ -53,7 +60,7 @@ export function BuyNowForm({ productId, productName, price, stock }: BuyNowFormP
 
       if (response.ok) {
         toast.success('Order placed successfully! We will deliver to your address.')
-        router.push('/')
+        router.push('/thank-you')
       } else {
         toast.error('Failed to place order. Please try again.')
       }

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createOrder, incrementProductSales, getOrders } from '@/lib/db'
+import { createOrder, incrementProductSales, getOrders, getCustomerByEmail } from '@/lib/db'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function GET() {
   try {
@@ -14,6 +16,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user || !session.user.email) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
+    const customer = await getCustomerByEmail(session.user.email)
+    if (!customer) {
+      return NextResponse.json({ error: 'Customer profile not found' }, { status: 403 })
+    }
+
     const body = await request.json()
     const {
       product_id,
@@ -30,9 +42,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
     }
 
-    // Create the order
+    // Create the order associated with customer
     const order = await createOrder({
       product_id: parseInt(product_id),
+      customer_id: customer.id,
       customer_name,
       customer_phone,
       delivery_address,

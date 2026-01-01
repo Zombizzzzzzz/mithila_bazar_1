@@ -1,3 +1,39 @@
+import GoogleProvider from 'next-auth/providers/google'
+import NextAuth, { NextAuthOptions } from 'next-auth'
+import { sql } from './db'
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || ''
+    })
+  ],
+  secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async signIn({ user }) {
+      try {
+        const email = user.email || null
+        const name = user.name || null
+        const image = user.image || null
+
+        if (email) {
+          await sql`
+            INSERT INTO customers (email, name, image_url)
+            VALUES (${email}, ${name}, ${image})
+            ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, image_url = EXCLUDED.image_url
+          `
+        }
+      } catch (err) {
+        console.error('Error creating/updating customer during signIn:', err)
+      }
+
+      return true
+    }
+  }
+}
+
+export default NextAuth(authOptions)
 import { NextRequest, NextResponse } from 'next/server'
 
 export function checkAdminAuth(request: NextRequest) {

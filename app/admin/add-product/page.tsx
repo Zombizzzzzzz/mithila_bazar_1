@@ -17,6 +17,7 @@ interface ProductFormData {
   price: string
   category_id: string
   image_url: string
+  stock: string
 }
 
 export default function AddProductPage() {
@@ -28,6 +29,7 @@ export default function AddProductPage() {
     price: '',
     category_id: '',
     image_url: '',
+    stock: '',
   })
 
   useEffect(() => {
@@ -78,6 +80,7 @@ export default function AddProductPage() {
           slug,
           price: parseFloat(formData.price),
           category_id: parseInt(formData.category_id),
+          stock: parseInt(formData.stock),
         }),
       })
 
@@ -137,7 +140,7 @@ export default function AddProductPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="price">Price ($)</Label>
+                  <Label htmlFor="price">Price (रु)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -145,6 +148,18 @@ export default function AddProductPage() {
                     min="0"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="stock">Stock Quantity</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    min="0"
+                    value={formData.stock}
+                    onChange={(e) => handleInputChange('stock', e.target.value)}
                     required
                   />
                 </div>

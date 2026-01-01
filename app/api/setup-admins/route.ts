@@ -24,16 +24,6 @@ export async function GET() {
       ON CONFLICT (slug) DO NOTHING
     `
 
-    // Seed sample products
-    await sql`
-      INSERT INTO products (name, slug, description, price, category_id, image_url, features, stock) VALUES
-      ('Wireless Bluetooth Headphones', 'wireless-bluetooth-headphones', 'High-quality wireless headphones with noise cancellation', 2999.99, (SELECT id FROM categories WHERE slug = 'electronics'), 'https://res.cloudinary.com/demo/image/upload/v1/sample.jpg', '["Noise Cancellation", "40hr Battery", "Bluetooth 5.0"]', 50),
-      ('Traditional Mithila Painting', 'traditional-mithila-painting', 'Authentic hand-painted Mithila art on canvas', 4999.99, (SELECT id FROM categories WHERE slug = 'hand-mades'), 'https://res.cloudinary.com/demo/image/upload/v1/sample2.jpg', '["Hand Painted", "Traditional Design", "Canvas Material"]', 10),
-      ('Luxury Wrist Watch', 'luxury-wrist-watch', 'Elegant timepiece with leather strap', 7999.99, (SELECT id FROM categories WHERE slug = 'watches'), 'https://res.cloudinary.com/demo/image/upload/v1/sample3.jpg', '["Leather Strap", "Water Resistant", "Swiss Movement"]', 25),
-      ('Traditional Kurta Set', 'traditional-kurta-set', 'Premium cotton kurta with matching pajamas', 2499.99, (SELECT id FROM categories WHERE slug = 'clothings'), 'https://res.cloudinary.com/demo/image/upload/v1/sample4.jpg', '["Cotton Fabric", "Traditional Design", "Comfort Fit"]', 30)
-      ON CONFLICT (slug) DO NOTHING
-    `
-
     // Create products table
     await sql`
       CREATE TABLE IF NOT EXISTS products (
@@ -51,11 +41,42 @@ export async function GET() {
       )
     `
 
-    // Create orders table
+    // Ensure products table has all required columns (idempotent for existing DBs)
+    await sql`
+      ALTER TABLE IF EXISTS products
+      ADD COLUMN IF NOT EXISTS image_url TEXT,
+      ADD COLUMN IF NOT EXISTS features JSONB DEFAULT '[]',
+      ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS sales_count INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+    `
+
+    // Seed sample products
+    await sql`
+      INSERT INTO products (name, slug, description, price, category_id, image_url, features, stock) VALUES
+      ('Wireless Bluetooth Headphones', 'wireless-bluetooth-headphones', 'High-quality wireless headphones with noise cancellation', 2999.99, (SELECT id FROM categories WHERE slug = 'electronics'), 'https://res.cloudinary.com/demo/image/upload/v1/sample.jpg', '["Noise Cancellation", "40hr Battery", "Bluetooth 5.0"]', 50),
+      ('Traditional Mithila Painting', 'traditional-mithila-painting', 'Authentic hand-painted Mithila art on canvas', 4999.99, (SELECT id FROM categories WHERE slug = 'hand-mades'), 'https://res.cloudinary.com/demo/image/upload/v1/sample2.jpg', '["Hand Painted", "Traditional Design", "Canvas Material"]', 10),
+      ('Luxury Wrist Watch', 'luxury-wrist-watch', 'Elegant timepiece with leather strap', 7999.99, (SELECT id FROM categories WHERE slug = 'watches'), 'https://res.cloudinary.com/demo/image/upload/v1/sample3.jpg', '["Leather Strap", "Water Resistant", "Swiss Movement"]', 25),
+      ('Traditional Kurta Set', 'traditional-kurta-set', 'Premium cotton kurta with matching pajamas', 2499.99, (SELECT id FROM categories WHERE slug = 'clothings'), 'https://res.cloudinary.com/demo/image/upload/v1/sample4.jpg', '["Cotton Fabric", "Traditional Design", "Comfort Fit"]', 30)
+      ON CONFLICT (slug) DO NOTHING
+    `
+    // Create customers table
+    await sql`
+      CREATE TABLE IF NOT EXISTS customers (
+        id SERIAL PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        name TEXT,
+        image_url TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `
+
+    // Create orders table (associate with customers)
     await sql`
       CREATE TABLE IF NOT EXISTS orders (
         id SERIAL PRIMARY KEY,
         product_id INTEGER REFERENCES products(id),
+        customer_id INTEGER REFERENCES customers(id),
         customer_name TEXT NOT NULL,
         customer_phone TEXT NOT NULL,
         delivery_address TEXT NOT NULL,
@@ -126,16 +147,6 @@ export async function POST() {
       ON CONFLICT (slug) DO NOTHING
     `
 
-    // Seed sample products
-    await sql`
-      INSERT INTO products (name, slug, description, price, category_id, image_url, features, stock) VALUES
-      ('Wireless Bluetooth Headphones', 'wireless-bluetooth-headphones', 'High-quality wireless headphones with noise cancellation', 2999.99, (SELECT id FROM categories WHERE slug = 'electronics'), 'https://res.cloudinary.com/demo/image/upload/v1/sample.jpg', '["Noise Cancellation", "40hr Battery", "Bluetooth 5.0"]', 50),
-      ('Traditional Mithila Painting', 'traditional-mithila-painting', 'Authentic hand-painted Mithila art on canvas', 4999.99, (SELECT id FROM categories WHERE slug = 'hand-mades'), 'https://res.cloudinary.com/demo/image/upload/v1/sample2.jpg', '["Hand Painted", "Traditional Design", "Canvas Material"]', 10),
-      ('Luxury Wrist Watch', 'luxury-wrist-watch', 'Elegant timepiece with leather strap', 7999.99, (SELECT id FROM categories WHERE slug = 'watches'), 'https://res.cloudinary.com/demo/image/upload/v1/sample3.jpg', '["Leather Strap", "Water Resistant", "Swiss Movement"]', 25),
-      ('Traditional Kurta Set', 'traditional-kurta-set', 'Premium cotton kurta with matching pajamas', 2499.99, (SELECT id FROM categories WHERE slug = 'clothings'), 'https://res.cloudinary.com/demo/image/upload/v1/sample4.jpg', '["Cotton Fabric", "Traditional Design", "Comfort Fit"]', 30)
-      ON CONFLICT (slug) DO NOTHING
-    `
-
     // Create products table
     await sql`
       CREATE TABLE IF NOT EXISTS products (
@@ -151,6 +162,26 @@ export async function POST() {
         sales_count INTEGER DEFAULT 0,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
+    `
+
+    // Ensure products table has all required columns (idempotent for existing DBs)
+    await sql`
+      ALTER TABLE IF EXISTS products
+      ADD COLUMN IF NOT EXISTS image_url TEXT,
+      ADD COLUMN IF NOT EXISTS features JSONB DEFAULT '[]',
+      ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS sales_count INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+    `
+
+    // Seed sample products
+    await sql`
+      INSERT INTO products (name, slug, description, price, category_id, image_url, features, stock) VALUES
+      ('Wireless Bluetooth Headphones', 'wireless-bluetooth-headphones', 'High-quality wireless headphones with noise cancellation', 2999.99, (SELECT id FROM categories WHERE slug = 'electronics'), 'https://res.cloudinary.com/demo/image/upload/v1/sample.jpg', '["Noise Cancellation", "40hr Battery", "Bluetooth 5.0"]', 50),
+      ('Traditional Mithila Painting', 'traditional-mithila-painting', 'Authentic hand-painted Mithila art on canvas', 4999.99, (SELECT id FROM categories WHERE slug = 'hand-mades'), 'https://res.cloudinary.com/demo/image/upload/v1/sample2.jpg', '["Hand Painted", "Traditional Design", "Canvas Material"]', 10),
+      ('Luxury Wrist Watch', 'luxury-wrist-watch', 'Elegant timepiece with leather strap', 7999.99, (SELECT id FROM categories WHERE slug = 'watches'), 'https://res.cloudinary.com/demo/image/upload/v1/sample3.jpg', '["Leather Strap", "Water Resistant", "Swiss Movement"]', 25),
+      ('Traditional Kurta Set', 'traditional-kurta-set', 'Premium cotton kurta with matching pajamas', 2499.99, (SELECT id FROM categories WHERE slug = 'clothings'), 'https://res.cloudinary.com/demo/image/upload/v1/sample4.jpg', '["Cotton Fabric", "Traditional Design", "Comfort Fit"]', 30)
+      ON CONFLICT (slug) DO NOTHING
     `
 
     // Create orders table
