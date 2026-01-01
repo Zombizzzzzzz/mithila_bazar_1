@@ -20,7 +20,26 @@ export interface Product {
   price: number
   image_url: string
   features: any[] | null
+  stock: number
+  sales_count: number
   created_at: Date
+}
+
+export interface Order {
+  id: number
+  product_id: number
+  customer_name: string
+  customer_phone: string
+  delivery_address: string
+  delivery_city: string
+  quantity: number
+  total_amount: number
+  order_status: string
+  payment_method: string
+  created_at: Date
+  product_name?: string
+  product_slug?: string
+  product_image?: string
 }
 
 export interface Category {
@@ -121,5 +140,70 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   } catch (error) {
     console.error("[v0] Error fetching product:", error)
     return null
+  }
+}
+
+export async function createOrder(orderData: {
+  product_id: number
+  customer_name: string
+  customer_phone: string
+  delivery_address: string
+  delivery_city: string
+  quantity: number
+  total_amount: number
+}): Promise<Order | null> {
+  try {
+    const orders = await sql`
+      INSERT INTO orders (product_id, customer_name, customer_phone, delivery_address, delivery_city, quantity, total_amount)
+      VALUES (${orderData.product_id}, ${orderData.customer_name}, ${orderData.customer_phone}, ${orderData.delivery_address}, ${orderData.delivery_city}, ${orderData.quantity}, ${orderData.total_amount})
+      RETURNING *
+    `
+    return orders[0] as Order
+  } catch (error) {
+    console.error("[v0] Error creating order:", error)
+    return null
+  }
+}
+
+export async function getOrders(): Promise<(Order & { product_name?: string; product_slug?: string; product_image?: string })[]> {
+  try {
+    const orders = await sql`
+      SELECT
+        o.*,
+        p.name as product_name,
+        p.slug as product_slug,
+        p.image_url as product_image
+      FROM orders o
+      JOIN products p ON o.product_id = p.id
+      ORDER BY o.created_at DESC
+    `
+    return orders as (Order & { product_name?: string; product_slug?: string; product_image?: string })[]
+  } catch (error) {
+    console.error("[v0] Error fetching orders:", error)
+    return []
+  }
+}
+
+export async function updateProductStock(productId: number, newStock: number): Promise<boolean> {
+  try {
+    await sql`
+      UPDATE products SET stock = ${newStock} WHERE id = ${productId}
+    `
+    return true
+  } catch (error) {
+    console.error("[v0] Error updating product stock:", error)
+    return false
+  }
+}
+
+export async function incrementProductSales(productId: number, quantity: number): Promise<boolean> {
+  try {
+    await sql`
+      UPDATE products SET sales_count = sales_count + ${quantity} WHERE id = ${productId}
+    `
+    return true
+  } catch (error) {
+    console.error("[v0] Error incrementing product sales:", error)
+    return false
   }
 }

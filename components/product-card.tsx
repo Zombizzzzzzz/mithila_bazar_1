@@ -29,7 +29,12 @@ export function ProductCard({ product }: ProductCardProps) {
           </h3>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="font-serif text-lg sm:text-xl font-bold text-foreground">${Number(product.price).toFixed(2)}</span>
+            <span className="font-serif text-lg sm:text-xl font-bold text-foreground">रु {Number(product.price).toFixed(2)}</span>
+          </div>
+
+          <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+            <span>Stock: {product.stock}</span>
+            <span>Sold: {product.sales_count}</span>
           </div>
         </CardFooter>
       </Card>

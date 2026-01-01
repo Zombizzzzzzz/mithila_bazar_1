@@ -20,77 +20,83 @@ export default function AboutPage() {
               experience that celebrates both heritage and progress.
             </p>
          <h1 className="font-serif text-5xl font-bold text-foreground text-center sm:text-left mb-12">
-  Our Crew
+  Our Team
 </h1>
 
-{/* CREW MEMBER */}
+{/* TEAM MEMBERS */}
 <div className="space-y-16">
 
-  {/* Founder 1 */}
+  {/* Yashwant Sah */}
   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-    <div className="p-5 rounded-tl-[40%] rounded-tr-[60%] rounded-br-[35%] rounded-bl-[55%] overflow-hidden">
+    <div className="relative p-5 rounded-tl-[40%] rounded-tr-[60%] rounded-br-[35%] rounded-bl-[55%] overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
       <Image
-        src="/profile.jpg"
-        alt="Mithila Bazar Crew"
+        src="/yaswant.jpg"
+        alt="Yashwant Sah - Product Manager"
         width={240}
         height={240}
-        className="object-cover w-40 h-40 sm:w-60 sm:h-60"
+        className="object-cover w-40 h-40 sm:w-60 sm:h-60 rounded-lg shadow-lg"
       />
     </div>
 
     <div className="text-center sm:text-left max-w-md">
       <h2 className="font-serif text-3xl font-bold text-foreground mb-2">
-        Founder
+        Yashwant Sah
       </h2>
-      <p>
-        Currently Operating As Product Manager,{" "}
-        <u><b>Yashwant Jha</b></u>
+      <p className="text-lg text-muted-foreground mb-4">
+        Product Manager
+      </p>
+      <p className="text-muted-foreground leading-relaxed">
+        Leading product strategy and ensuring exceptional user experience across all Mithila Bazar platforms.
       </p>
     </div>
   </div>
 
-  {/* Founder 2 */}
-  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-    <div className="p-5 rounded-tl-[40%] rounded-tr-[60%] rounded-br-[35%] rounded-bl-[55%] overflow-hidden">
+  {/* Siddhant Dahal */}
+  <div className="flex flex-col sm:flex-row-reverse items-center sm:items-start gap-8">
+    <div className="relative p-5 rounded-tl-[40%] rounded-tr-[60%] rounded-br-[35%] rounded-bl-[55%] overflow-hidden bg-gradient-to-br from-green-100 to-blue-100">
       <Image
-        src="/profile.jpg"
-        alt="Mithila Bazar Crew"
+        src="/Siddhant.jpg"
+        alt="Siddhant Dahal - Technical Lead"
         width={240}
         height={240}
-        className="object-cover w-40 h-40 sm:w-60 sm:h-60"
+        className="object-cover w-40 h-40 sm:w-60 sm:h-60 rounded-lg shadow-lg"
       />
     </div>
 
-    <div className="text-center sm:text-left max-w-md">
+    <div className="text-center sm:text-right max-w-md">
       <h2 className="font-serif text-3xl font-bold text-foreground mb-2">
-        Founder
+        Siddhant Dahal
       </h2>
-      <p>
-        Our product distributor,{" "}
-        <u><b>Himanshu</b></u>
+      <p className="text-lg text-muted-foreground mb-4">
+        Technical Lead
+      </p>
+      <p className="text-muted-foreground leading-relaxed">
+        Architecting robust technical solutions and leading the development team to build scalable e-commerce platforms.
       </p>
     </div>
   </div>
 
-  {/* Co-Founder */}
+  {/* Himanshu Yadav */}
   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-    <div className="p-5 rounded-tl-[40%] rounded-tr-[60%] rounded-br-[35%] rounded-bl-[55%] overflow-hidden">
+    <div className="relative p-5 rounded-tl-[40%] rounded-tr-[60%] rounded-br-[35%] rounded-bl-[55%] overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100">
       <Image
-        src="/profile.jpg"
-        alt="Mithila Bazar Crew"
+        src="/himanshu.jpg"
+        alt="Himanshu Yadav - Product Distributor"
         width={240}
         height={240}
-        className="object-cover w-40 h-40 sm:w-60 sm:h-60"
+        className="object-cover w-40 h-40 sm:w-60 sm:h-60 rounded-lg shadow-lg"
       />
     </div>
 
     <div className="text-center sm:text-left max-w-md">
       <h2 className="font-serif text-3xl font-bold text-foreground mb-2">
-        Co-Founder
+        Himanshu Yadav
       </h2>
-      <p>
-        Technical Lead for Mithila Bazar,{" "}
-        <u><b>Siddhant Dahal</b></u>
+      <p className="text-lg text-muted-foreground mb-4">
+        Product Distributor
+      </p>
+      <p className="text-muted-foreground leading-relaxed">
+        Managing product sourcing, logistics, and ensuring seamless delivery of quality products to our customers.
       </p>
     </div>
   </div>
