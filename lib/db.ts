@@ -23,6 +23,14 @@ export interface Product {
   created_at: Date
 }
 
+export interface Category {
+  id: number
+  name: string
+  slug: string
+  description: string | null
+  image_url: string | null
+}
+
 export async function getCategories(): Promise<Category[]> {
   try {
     const categories = await sql`
