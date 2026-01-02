@@ -188,7 +188,18 @@ export async function getOrders(): Promise<(Order & { product_name?: string; pro
   try {
     const orders = await sql`
       SELECT
-        o.*,
+        o.id,
+        o.product_id,
+        o.customer_id,
+        o.customer_name,
+        o.customer_phone,
+        o.delivery_address,
+        o.delivery_city,
+        o.quantity,
+        CAST(o.total_amount AS DECIMAL) as total_amount,
+        o.order_status,
+        o.payment_method,
+        o.created_at,
         p.name as product_name,
         p.slug as product_slug,
         p.image_url as product_image
@@ -207,7 +218,18 @@ export async function getOrdersByCustomer(customerId: number): Promise<(Order & 
   try {
     const orders = await sql`
       SELECT
-        o.*,
+        o.id,
+        o.product_id,
+        o.customer_id,
+        o.customer_name,
+        o.customer_phone,
+        o.delivery_address,
+        o.delivery_city,
+        o.quantity,
+        CAST(o.total_amount AS DECIMAL) as total_amount,
+        o.order_status,
+        o.payment_method,
+        o.created_at,
         p.name as product_name,
         p.slug as product_slug,
         p.image_url as product_image

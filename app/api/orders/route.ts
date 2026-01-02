@@ -3,6 +3,16 @@ import { createOrder, incrementProductSales, getOrders, getCustomerByEmail, sql 
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+export async function GET() {
+  try {
+    const orders = await getOrders()
+    return NextResponse.json(orders)
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+  }
+}
+
 export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions)

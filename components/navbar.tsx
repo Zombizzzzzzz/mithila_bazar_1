@@ -1,10 +1,36 @@
 "use client"
 
 import Link from "next/link"
-import { useTheme } from "./theme-provider"
-import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ClientAuth from '@/components/auth/client-auth'
+import { useEffect, useState } from "react"
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "./theme-provider"
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Sun className="h-4 w-4" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    )
+  }
+
+  return (
+    <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
+      {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+      <span className="sr-only">Toggle theme</span>
+    </Button>
+  )
+}
 
 export function Navbar() {
   const { theme, toggleTheme } = useTheme()
@@ -38,18 +64,13 @@ export function Navbar() {
           </Link>
 
           {/* Theme Toggle */}
-          <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
-            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+          <ThemeToggle />
         </div>
 
         {/* Mobile-only theme toggle */}
         <div className="flex items-center gap-2 md:hidden">
           <ClientAuth />
-          <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
-            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </Button>
+          <ThemeToggle />
         </div>
       </div>
     </nav>

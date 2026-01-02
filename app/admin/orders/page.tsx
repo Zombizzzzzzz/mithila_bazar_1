@@ -208,7 +208,7 @@ export default function AdminOrdersPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        रु {order.total_amount.toFixed(2)}
+                        रु {Number(order.total_amount).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.order_status)}`}>
