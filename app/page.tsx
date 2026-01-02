@@ -51,7 +51,7 @@ export default async function HomePage() {
       <section id="featured" className="container mx-auto px-4 py-16">
         <GSAPReveal direction="up">
           <div className="mb-12 text-center">
-            <h2 className="font-serif text-4xl font-bold text-foreground">Featured Products</h2>
+            <h2 className="font-serif text-4xl font-bold text-foreground">Mithila Things</h2>
             <p className="mt-3 text-lg text-muted-foreground">Hand-picked premium items just for you</p>
           </div>
         </GSAPReveal>
