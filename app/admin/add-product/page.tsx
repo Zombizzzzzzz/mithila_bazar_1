@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ImageUpload } from '@/components/image-upload'
+import { MultiImageUpload } from '@/components/multi-image-upload'
+import { VideoUpload } from '@/components/video-upload'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 
@@ -17,6 +19,8 @@ interface ProductFormData {
   price: string
   category_id: string
   image_url: string
+  images: string[]
+  videos: string[]
   stock: string
 }
 
@@ -29,6 +33,8 @@ export default function AddProductPage() {
     price: '',
     category_id: '',
     image_url: '',
+    images: [],
+    videos: [],
     stock: '',
   })
 
@@ -64,11 +70,15 @@ export default function AddProductPage() {
     setLoading(true)
 
     try {
-      // Generate slug from name
-      const slug = formData.name
+      // Generate unique slug from name
+      const baseSlug = formData.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
+
+      // Add timestamp to ensure uniqueness
+      const timestamp = Date.now()
+      const slug = `${baseSlug}-${timestamp}`
 
       const response = await fetch('/api/products', {
         method: 'POST',
@@ -183,6 +193,20 @@ export default function AddProductPage() {
                   <ImageUpload
                     value={formData.image_url}
                     onChange={(url) => handleInputChange('image_url', url)}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <MultiImageUpload
+                    value={formData.images}
+                    onChange={(urls) => handleInputChange('images', urls)}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <VideoUpload
+                    value={formData.videos}
+                    onChange={(urls) => handleInputChange('videos', urls)}
                   />
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { Star, ShoppingCart, Heart, Truck, MapPin, Phone, User } from "lucide-re
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BuyNowForm } from "@/components/buy-now-form"
+import { ProductMediaGallery } from "@/components/product-media-gallery"
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>
@@ -24,16 +25,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <main>
       <section className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-          {/* Product Image */}
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted">
-            <Image
-              src={product.image_url || "/placeholder.svg"}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
+          {/* Product Media Gallery */}
+          <ProductMediaGallery
+            imageUrl={product.image_url}
+            images={product.images || []}
+            videos={product.videos || []}
+            productName={product.name}
+          />
 
           {/* Product Details */}
           <div className="flex flex-col gap-6">

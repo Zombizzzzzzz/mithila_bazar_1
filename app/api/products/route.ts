@@ -15,15 +15,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, slug, description, price, category_id, image_url, stock } = body
+    const { name, slug, description, price, category_id, image_url, images, videos, stock } = body
 
     if (!name || !slug || !description || !price || !category_id || stock === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     const result = await sql`
-      INSERT INTO products (name, slug, description, price, category_id, image_url, stock)
-      VALUES (${name}, ${slug}, ${description}, ${price}, ${category_id}, ${image_url}, ${stock})
+      INSERT INTO products (name, slug, description, price, category_id, image_url, images, videos, stock)
+      VALUES (${name}, ${slug}, ${description}, ${price}, ${category_id}, ${image_url}, ${images || []}, ${videos || []}, ${stock})
       RETURNING *
     `
 

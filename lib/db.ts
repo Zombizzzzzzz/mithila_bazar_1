@@ -19,6 +19,8 @@ export interface Product {
   description: string
   price: number
   image_url: string
+  images: string[] | null
+  videos: string[] | null
   features: any[] | null
   stock: number
   sales_count: number
