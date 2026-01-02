@@ -3,6 +3,24 @@ import { authOptions } from '@/lib/auth'
 import { getCustomerByEmail, getOrdersByCustomer } from '@/lib/db'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+
+function getStatusColor(status: string) {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800'
+    case 'confirmed':
+      return 'bg-blue-100 text-blue-800'
+    case 'shipped':
+      return 'bg-purple-100 text-purple-800'
+    case 'delivered':
+      return 'bg-green-100 text-green-800'
+    case 'cancelled':
+      return 'bg-red-100 text-red-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
@@ -51,19 +69,40 @@ export default async function ProfilePage() {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <div key={order.id} className="p-4 border rounded-md">
-                <div className="flex items-center gap-4">
+              <div key={order.id} className="p-6 border rounded-lg shadow-sm">
+                <div className="flex items-center gap-4 mb-4">
                   {order.product_image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={order.product_image} alt={order.product_name} className="h-16 w-16 object-cover rounded" />
+                    <img src={order.product_image} alt={order.product_name} className="h-20 w-20 object-cover rounded" />
                   ) : (
-                    <div className="h-16 w-16 bg-muted rounded" />
+                    <div className="h-20 w-20 bg-muted rounded flex items-center justify-center">
+                      <span className="text-muted-foreground text-sm">No image</span>
+                    </div>
                   )}
 
                   <div className="flex-1">
-                    <Link href={`/product/${order.product_slug}`} className="font-medium">{order.product_name}</Link>
-                    <div className="text-sm text-muted-foreground">Quantity: {order.quantity} • Total: रु {Number(order.total_amount).toFixed(2)}</div>
-                    <div className="text-sm">Status: {order.order_status}</div>
+                    <Link href={`/product/${order.product_slug}`} className="font-medium text-lg hover:underline">
+                      {order.product_name}
+                    </Link>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Quantity: {order.quantity} • Total: रु {Number(order.total_amount).toFixed(2)}
+                    </div>
+                    <div className="mt-2">
+                      <Badge className={getStatusColor(order.order_status)}>
+                        {order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Order Date:</span> {new Date(order.created_at).toLocaleDateString()}
+                    </div>
+                    <div>
+                      <span className="font-medium">Order ID:</span> #{order.id}
+                    </div>
                   </div>
                 </div>
               </div>

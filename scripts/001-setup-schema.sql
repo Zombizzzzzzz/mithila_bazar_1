@@ -17,6 +17,33 @@ CREATE TABLE IF NOT EXISTS products (
   category_id INTEGER REFERENCES categories(id),
   image_url TEXT,
   features JSONB DEFAULT '[]',
+  stock INTEGER DEFAULT 0,
+  sales_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create customers table
+CREATE TABLE IF NOT EXISTS customers (
+  id SERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  image_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create orders table
+CREATE TABLE IF NOT EXISTS orders (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  customer_id INTEGER REFERENCES customers(id),
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT NOT NULL,
+  delivery_address TEXT NOT NULL,
+  delivery_city TEXT NOT NULL,
+  quantity INTEGER NOT NULL,
+  total_amount DECIMAL(10, 2) NOT NULL,
+  order_status TEXT DEFAULT 'pending',
+  payment_method TEXT DEFAULT 'cash_on_delivery',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

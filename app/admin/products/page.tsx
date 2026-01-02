@@ -102,6 +102,11 @@ export default function AdminProductsPage() {
                 Add Product
               </button>
             </Link>
+            <Link href="/admin/orders">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+                📋 Orders
+              </button>
+            </Link>
             <button
               onClick={handleLogout}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"

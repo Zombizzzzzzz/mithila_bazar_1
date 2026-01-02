@@ -58,9 +58,29 @@ export default function AdminOrdersPage() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_session')
-    router.push('/admin/login')
+  const updateOrderStatus = async (orderId: number, newStatus: string) => {
+    try {
+      const response = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          status: newStatus,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update order status')
+      }
+
+      // Reload orders to reflect changes
+      loadOrders()
+    } catch (error) {
+      console.error('Error updating order status:', error)
+      alert('Failed to update order status')
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -72,6 +92,11 @@ export default function AdminOrdersPage() {
       case 'cancelled': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_session')
+    router.push('/admin/login')
   }
 
   if (loading) {
@@ -139,10 +164,10 @@ export default function AdminOrdersPage() {
                       Order ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Customer
+                      Customer Details
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
+                      Product & Quantity
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Amount
@@ -151,7 +176,7 @@ export default function AdminOrdersPage() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -161,12 +186,26 @@ export default function AdminOrdersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         #{order.id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{order.customer_name}</div>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">{order.customer_name}</div>
                         <div className="text-sm text-gray-500">{order.customer_phone}</div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          <div>{order.delivery_address}</div>
+                          <div>{order.delivery_city}</div>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {order.product_name || `Product #${order.product_id}`}
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {order.product_name || `Product #${order.product_id}`}
+                        </div>
+                        <div className="text-sm text-gray-500">Qty: {order.quantity}</div>
+                        {order.product_image && (
+                          <img
+                            src={order.product_image}
+                            alt={order.product_name || 'Product'}
+                            className="w-12 h-12 object-cover rounded mt-1"
+                          />
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         रु {order.total_amount.toFixed(2)}
@@ -176,8 +215,41 @@ export default function AdminOrdersPage() {
                           {order.order_status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString()}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex flex-col gap-1">
+                          {order.order_status === 'pending' && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                              className="text-blue-600 hover:text-blue-900 text-xs"
+                            >
+                              Confirm Order
+                            </button>
+                          )}
+                          {order.order_status === 'confirmed' && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, 'shipped')}
+                              className="text-purple-600 hover:text-purple-900 text-xs"
+                            >
+                              Mark as Shipped
+                            </button>
+                          )}
+                          {order.order_status === 'shipped' && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, 'delivered')}
+                              className="text-green-600 hover:text-green-900 text-xs"
+                            >
+                              Mark as Delivered
+                            </button>
+                          )}
+                          {order.order_status !== 'cancelled' && order.order_status !== 'delivered' && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                              className="text-red-600 hover:text-red-900 text-xs"
+                            >
+                              Cancel Order
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
