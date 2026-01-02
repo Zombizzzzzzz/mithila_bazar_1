@@ -18,7 +18,7 @@ export default function CustomerServicePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">mithilabazar@gmail.com</p>
+                <p className="text-muted-foreground">mithilabazar.official@gmail.com</p>
                 <p className="mt-2 text-sm text-muted-foreground">We typically respond within 24 hours</p>
               </CardContent>
             </Card>
