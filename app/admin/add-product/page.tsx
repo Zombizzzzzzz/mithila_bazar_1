@@ -107,7 +107,7 @@ export default function AddProductPage() {
     }
   }
 
-  const handleInputChange = (field: keyof ProductFormData, value: string) => {
+  const handleInputChange = (field: keyof ProductFormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
