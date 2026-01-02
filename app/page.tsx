@@ -5,7 +5,15 @@ import Link from "next/link"
 import { GSAPReveal } from "@/components/gsap-reveal" // Added GSAP reveal
 import { GlobalSearch } from "@/components/global-search"
 
+  export const dynamic = "force-dynamic";
+
+import { getProducts } from "@/lib/db";
+
+
 export default async function HomePage() {
+  
+   const products = await getProducts();
+  
   const featuredProducts = await getFeaturedProducts(8)
 
   return (

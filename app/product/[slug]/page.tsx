@@ -10,12 +10,7 @@ interface ProductPageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  const products = await getProducts()
-  return products.map((product) => ({
-    slug: product.slug,
-  }))
-}
+export const dynamic = 'force-dynamic';
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
