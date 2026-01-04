@@ -92,33 +92,46 @@ export default function ProductPage() {
 
             <p className="text-lg leading-relaxed text-muted-foreground">{product.description}</p>
 
-            {product.features && product.features.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-semibold text-foreground">Features:</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  {product.features.map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             <div className="text-sm text-muted-foreground">
-              <span>{product.sales_count} sold</span>
+              <span className="font-bold text-lg text-orange-600 bg-orange-50 px-2 py-1 rounded-md">{product.sales_count} sold</span>
             </div>
 
-            <BuyNowForm
-              productId={product.id}
-              productName={product.name}
-              price={product.price}
-              stock={product.stock}
-            />
+           
           </div>
         </div>
       </section>
+         {/* Visual separator */}
+            <div className="border-t border-gray-200 my-8"></div>
 
-      {/* Reviews Section */}
-      <section className="container mx-auto px-4 py-16">
+            {/* Order Form and Features */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-20">
+              {/* Features */}
+              {product.features && product.features.length > 0 && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h3 className="font-semibold text-foreground mb-4 text-lg">Features:</h3>
+                  <ul className="space-y-3">
+                    {product.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="text-green-500 mt-1">✓</span>
+                        <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Order Form */}
+              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                <BuyNowForm
+                  productId={product.id}
+                  productName={product.name}
+                  price={product.price}
+                  stock={product.stock}
+                />
+              </div>
+            </div>
+      {/* Reviews Section - moved up to reduce spacing */}
+      <section className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-foreground mb-8">Customer Reviews</h2>
 

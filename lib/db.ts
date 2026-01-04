@@ -189,6 +189,18 @@ export async function getProductById(id: number): Promise<Product | null> {
   }
 }
 
+export async function getOrderById(orderId: number): Promise<Order | null> {
+  try {
+    const orders = await sql`
+      SELECT * FROM orders WHERE id = ${orderId} LIMIT 1
+    `
+    return orders.length > 0 ? (orders[0] as Order) : null
+  } catch (error) {
+    console.error("[v0] Error fetching order by ID:", error)
+    return null
+  }
+}
+
 export async function createOrder(orderData: {
   product_id: number
   customer_id?: number
@@ -359,7 +371,7 @@ export async function getReviewByOrderId(orderId: number): Promise<Review | null
 
 export async function createReview(reviewData: {
   product_id: number
-  order_id: number
+  order_id?: number
   customer_id?: number
   customer_name: string
   customer_email?: string
@@ -369,7 +381,7 @@ export async function createReview(reviewData: {
   try {
     const result = await sql`
       INSERT INTO reviews (product_id, order_id, customer_id, customer_name, customer_email, rating, comment)
-      VALUES (${reviewData.product_id}, ${reviewData.order_id}, ${reviewData.customer_id}, ${reviewData.customer_name}, ${reviewData.customer_email}, ${reviewData.rating}, ${reviewData.comment})
+      VALUES (${reviewData.product_id}, ${reviewData.order_id || null}, ${reviewData.customer_id || null}, ${reviewData.customer_name}, ${reviewData.customer_email || null}, ${reviewData.rating}, ${reviewData.comment || null})
       RETURNING *
     `
     return result[0] as Review
