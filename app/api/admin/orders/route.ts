@@ -18,7 +18,10 @@ export async function PATCH(request: Request) {
 
     // Update order status
     await sql`
-      UPDATE orders SET order_status = ${status} WHERE id = ${orderId}
+      UPDATE orders
+      SET order_status = ${status},
+          delivery_status = CASE WHEN ${status} = 'delivered' THEN 'delivered' ELSE delivery_status END
+      WHERE id = ${orderId}
     `
 
     return NextResponse.json({ success: true, message: 'Order status updated successfully' })

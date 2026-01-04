@@ -15,15 +15,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, slug, description, price, category_id, image_url, images, videos, stock } = body
+    const { name, slug, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features } = body
 
     if (!name || !slug || !description || !price || !category_id || stock === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     const result = await sql`
-      INSERT INTO products (name, slug, description, price, category_id, image_url, images, videos, stock)
-      VALUES (${name}, ${slug}, ${description}, ${price}, ${category_id}, ${image_url}, ${images || []}, ${videos || []}, ${stock})
+      INSERT INTO products (name, slug, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features)
+      VALUES (${name}, ${slug}, ${description}, ${price}, ${category_id}, ${image_url}, ${images || []}, ${videos || []}, ${stock}, ${is_mithila_thing || false}, ${features || []})
       RETURNING *
     `
 
@@ -31,5 +31,34 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to create product:", error)
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { id, name, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features } = body
+
+    if (!id) {
+      return NextResponse.json({ error: "Product ID is required" }, { status: 400 })
+    }
+
+    const result = await sql`
+      UPDATE products
+      SET name = ${name}, description = ${description}, price = ${price}, category_id = ${category_id},
+          image_url = ${image_url}, images = ${images || []}, videos = ${videos || []}, stock = ${stock},
+          is_mithila_thing = ${is_mithila_thing || false}, features = ${features || []}
+      WHERE id = ${id}
+      RETURNING *
+    `
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(result[0])
+  } catch (error) {
+    console.error("Failed to update product:", error)
+    return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
   }
 }

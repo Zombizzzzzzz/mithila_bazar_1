@@ -18,7 +18,27 @@ export default async function HomePage() {
 
   return (
     <main>
-      {/* Hero Section */}
+     
+     {/* Featured Products */}
+      <section id="featured" className="container mx-auto px-4 py-16">
+        <GSAPReveal direction="up">
+          <div className="mb-12 text-center">
+            <h2 className="font-serif text-4xl font-bold text-foreground">Mithila Things</h2>
+            <p className="mt-3 text-lg text-muted-foreground">Hand-picked premium items just for you</p>
+          </div>
+        </GSAPReveal>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {featuredProducts.map((product, index) => (
+            <GSAPReveal key={product.id} delay={index * 0.1}>
+              <ProductCard product={product} />
+            </GSAPReveal>
+          ))}
+        </div>
+      </section>
+
+     
+        {/* Hero Section */}
       <section className="container mx-auto px-4 py-16">
         <GSAPReveal>
           <div className="text-center">
@@ -40,7 +60,8 @@ export default async function HomePage() {
           </div>
         </GSAPReveal>
       </section>
-
+      
+      
       {/* Global Search Section */}
       <section id="search" className="container mx-auto px-4 py-16 bg-muted/30">
         <GSAPReveal direction="up">
@@ -55,23 +76,9 @@ export default async function HomePage() {
         </GSAPReveal>
       </section>
 
-      {/* Featured Products */}
-      <section id="featured" className="container mx-auto px-4 py-16">
-        <GSAPReveal direction="up">
-          <div className="mb-12 text-center">
-            <h2 className="font-serif text-4xl font-bold text-foreground">Mithila Things</h2>
-            <p className="mt-3 text-lg text-muted-foreground">Hand-picked premium items just for you</p>
-          </div>
-        </GSAPReveal>
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {featuredProducts.map((product, index) => (
-            <GSAPReveal key={product.id} delay={index * 0.1}>
-              <ProductCard product={product} />
-            </GSAPReveal>
-          ))}
-        </div>
-      </section>
+    
+      
+     
     </main>
   )
 }

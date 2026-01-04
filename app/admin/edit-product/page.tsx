@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ImageUpload } from '@/components/image-upload'
 import { MultiImageUpload } from '@/components/multi-image-upload'
-import { Checkbox } from '@/components/ui/checkbox'
 import { VideoUpload } from '@/components/video-upload'
-import { useRouter } from 'next/navigation'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { Product } from '@/lib/db'
 
 interface ProductFormData {
   name: string
@@ -27,9 +28,13 @@ interface ProductFormData {
   features: string[]
 }
 
-export default function AddProductPage() {
+function EditProductForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const productId = searchParams.get('id')
+
   const [loading, setLoading] = useState(false)
+  const [fetchLoading, setFetchLoading] = useState(true)
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
@@ -63,10 +68,45 @@ export default function AddProductPage() {
       if (hoursDiff > 24) {
         localStorage.removeItem('admin_session')
         router.push('/admin/login')
+        return
+      }
+
+      // If authenticated, load product
+      if (productId) {
+        loadProduct(productId)
       }
     } catch (error) {
       localStorage.removeItem('admin_session')
       router.push('/admin/login')
+    }
+  }
+
+  const loadProduct = async (id: string) => {
+    try {
+      const response = await fetch(`/api/products/${id}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch product')
+      }
+      const product: Product = await response.json()
+
+      setFormData({
+        name: product.name,
+        description: product.description,
+        price: product.price.toString(),
+        category_id: product.category_id.toString(),
+        image_url: product.image_url || '',
+        images: product.images || [],
+        videos: product.videos || [],
+        stock: product.stock.toString(),
+        is_mithila_thing: product.is_mithila_thing || false,
+        features: product.features || [],
+      })
+    } catch (error) {
+      console.error('Error loading product:', error)
+      alert('Failed to load product')
+      router.push('/admin/products')
+    } finally {
+      setFetchLoading(false)
     }
   }
 
@@ -75,24 +115,14 @@ export default function AddProductPage() {
     setLoading(true)
 
     try {
-      // Generate unique slug from name
-      const baseSlug = formData.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '')
-
-      // Add timestamp to ensure uniqueness
-      const timestamp = Date.now()
-      const slug = `${baseSlug}-${timestamp}`
-
       const response = await fetch('/api/products', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          id: productId,
           ...formData,
-          slug,
           price: parseFloat(formData.price),
           category_id: parseInt(formData.category_id),
           stock: parseInt(formData.stock),
@@ -101,13 +131,13 @@ export default function AddProductPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create product')
+        throw new Error('Failed to update product')
       }
 
       router.push('/admin/products')
     } catch (error) {
-      console.error('Error creating product:', error)
-      alert('Failed to create product. Please try again.')
+      console.error('Error updating product:', error)
+      alert('Failed to update product. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -119,6 +149,17 @@ export default function AddProductPage() {
     } else {
       setFormData(prev => ({ ...prev, [field]: value }))
     }
+  }
+
+  if (fetchLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading product...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -133,7 +174,7 @@ export default function AddProductPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Add New Product</CardTitle>
+            <CardTitle>Edit Product</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -243,7 +284,7 @@ export default function AddProductPage() {
 
               <div className="flex gap-4">
                 <Button type="submit" disabled={loading}>
-                  {loading ? 'Creating...' : 'Create Product'}
+                  {loading ? 'Updating...' : 'Update Product'}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.push('/admin/products')}>
                   Cancel
@@ -254,5 +295,13 @@ export default function AddProductPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function EditProductPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditProductForm />
+    </Suspense>
   )
 }

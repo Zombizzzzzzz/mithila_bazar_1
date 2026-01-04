@@ -137,6 +137,11 @@ export default function AdminOrdersPage() {
                 Manage Products
               </button>
             </Link>
+            <Link href="/admin/reviews">
+              <button className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                ⭐ Reviews
+              </button>
+            </Link>
             <button
               onClick={handleLogout}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"

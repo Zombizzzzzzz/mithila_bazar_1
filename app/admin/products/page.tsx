@@ -107,6 +107,11 @@ export default function AdminProductsPage() {
                 📋 Orders
               </button>
             </Link>
+            <Link href="/admin/reviews">
+              <button className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2">
+                ⭐ Reviews
+              </button>
+            </Link>
             <button
               onClick={handleLogout}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"
@@ -123,13 +128,27 @@ export default function AdminProductsPage() {
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
                 <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <span className="text-xl font-bold text-green-600">${product.price}</span>
                   {product.image_url && (
                     <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
                       ✓ Has image
                     </span>
                   )}
+                </div>
+                {product.is_mithila_thing && (
+                  <div className="mb-4">
+                    <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      Mithila Thing
+                    </span>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Link href={`/admin/edit-product?id=${product.id}`}>
+                    <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                      Edit
+                    </button>
+                  </Link>
                 </div>
               </div>
             </div>

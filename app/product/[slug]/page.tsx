@@ -1,4 +1,8 @@
-import { getProductBySlug, getProducts, createOrder, incrementProductSales } from "@/lib/db"
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { getProductBySlug, getProducts, createOrder, incrementProductSales, getReviewsByProductId } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
 import Image from "next/image"
 import { Star, ShoppingCart, Heart, Truck, MapPin, Phone, User } from "lucide-react"
@@ -6,16 +10,58 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BuyNowForm } from "@/components/buy-now-form"
 import { ProductMediaGallery } from "@/components/product-media-gallery"
+import { ReviewsDisplay } from "@/components/reviews-display"
+import { ReviewForm } from "@/components/review-form"
+import type { Product, Review } from "@/lib/db"
 
-interface ProductPageProps {
-  params: Promise<{ slug: string }>
-}
+export default function ProductPage() {
+  const { slug } = useParams() as { slug: string }
+  const [product, setProduct] = useState<Product | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
 
-export const dynamic = 'force-dynamic';
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const productData = await getProductBySlug(slug)
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { slug } = await params
-  const product = await getProductBySlug(slug)
+        if (!productData) {
+          notFound()
+        }
+
+        setProduct(productData)
+        const reviewsData = await getReviewsByProductId(productData.id)
+        setReviews(reviewsData)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        notFound()
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (slug) {
+      fetchData()
+    }
+  }, [slug])
+
+  const handleReviewSubmitted = () => {
+    // Refresh reviews
+    getReviewsByProductId(product?.id || 0).then(setReviews)
+  }
+
+  if (loading) {
+    return (
+      <main>
+        <section className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading product...</p>
+          </div>
+        </section>
+      </main>
+    )
+  }
 
   if (!product) {
     notFound()
@@ -67,6 +113,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
               price={product.price}
               stock={product.stock}
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-foreground mb-8">Customer Reviews</h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3">
+              <ReviewsDisplay reviews={reviews} />
+            </div>
+            <div className="lg:col-span-2">
+              <ReviewForm productId={product.id} onReviewSubmitted={handleReviewSubmitted} />
+            </div>
           </div>
         </div>
       </section>

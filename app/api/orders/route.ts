@@ -3,8 +3,24 @@ import { createOrder, incrementProductSales, getOrders, getCustomerByEmail, sql 
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get('productId')
+    const delivered = searchParams.get('delivered')
+
+    if (productId && delivered === 'true') {
+      // Return delivered orders for a specific product (for review eligibility)
+      const orders = await sql`
+        SELECT o.id, o.customer_name, o.customer_email, o.delivery_status
+        FROM orders o
+        WHERE o.product_id = ${parseInt(productId)}
+        AND o.delivery_status = 'delivered'
+        ORDER BY o.created_at DESC
+      `
+      return NextResponse.json(orders)
+    }
+
     const orders = await getOrders()
     return NextResponse.json(orders)
   } catch (error) {

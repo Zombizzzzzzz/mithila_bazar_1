@@ -1,6 +1,13 @@
 import { neon } from "@neondatabase/serverless"
 
-const sql = neon(process.env.DATABASE_URL!)
+// Check if DATABASE_URL is available
+const databaseUrl = process.env.DATABASE_URL
+
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is not set. Please check your .env.local file.')
+}
+
+const sql = neon(databaseUrl)
 
 export { sql }
 
@@ -25,6 +32,7 @@ export interface Product {
   stock: number
   sales_count: number
   created_at: Date
+  is_mithila_thing?: boolean
 }
 
 export interface Order {
@@ -39,10 +47,24 @@ export interface Order {
   total_amount: number
   order_status: string
   payment_method: string
+  delivery_status?: string
   created_at: Date
   product_name?: string
   product_slug?: string
   product_image?: string
+}
+
+export interface Review {
+  id: number
+  product_id: number
+  order_id: number
+  customer_id?: number
+  customer_name: string
+  customer_email?: string
+  rating: number
+  comment?: string
+  created_at: Date
+  updated_at: Date
 }
 
 export interface Customer {
@@ -132,6 +154,7 @@ export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
   try {
     const products = await sql`
       SELECT * FROM products
+      WHERE is_mithila_thing = true
       ORDER BY created_at DESC
       LIMIT ${limit}
     `
@@ -146,6 +169,18 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const products = await sql`
       SELECT * FROM products WHERE slug = ${slug} LIMIT 1
+    `
+    return products.length > 0 ? (products[0] as Product) : null
+  } catch (error) {
+    console.error("[v0] Error fetching product:", error)
+    return null
+  }
+}
+
+export async function getProductById(id: number): Promise<Product | null> {
+  try {
+    const products = await sql`
+      SELECT * FROM products WHERE id = ${id} LIMIT 1
     `
     return products.length > 0 ? (products[0] as Product) : null
   } catch (error) {
@@ -294,6 +329,79 @@ export async function incrementProductSales(productId: number, quantity: number)
     return true
   } catch (error) {
     console.error("[v0] Error incrementing product sales:", error)
+    return false
+  }
+}
+
+export async function getReviewsByProductId(productId: number): Promise<Review[]> {
+  try {
+    const reviews = await sql`
+      SELECT * FROM reviews WHERE product_id = ${productId} ORDER BY created_at DESC
+    `
+    return reviews as Review[]
+  } catch (error) {
+    console.error("[v0] Error fetching reviews:", error)
+    return []
+  }
+}
+
+export async function getReviewByOrderId(orderId: number): Promise<Review | null> {
+  try {
+    const reviews = await sql`
+      SELECT * FROM reviews WHERE order_id = ${orderId} LIMIT 1
+    `
+    return reviews.length > 0 ? (reviews[0] as Review) : null
+  } catch (error) {
+    console.error("[v0] Error fetching review by order:", error)
+    return null
+  }
+}
+
+export async function createReview(reviewData: {
+  product_id: number
+  order_id: number
+  customer_id?: number
+  customer_name: string
+  customer_email?: string
+  rating: number
+  comment?: string
+}): Promise<Review | null> {
+  try {
+    const result = await sql`
+      INSERT INTO reviews (product_id, order_id, customer_id, customer_name, customer_email, rating, comment)
+      VALUES (${reviewData.product_id}, ${reviewData.order_id}, ${reviewData.customer_id}, ${reviewData.customer_name}, ${reviewData.customer_email}, ${reviewData.rating}, ${reviewData.comment})
+      RETURNING *
+    `
+    return result[0] as Review
+  } catch (error) {
+    console.error("[v0] Error creating review:", error)
+    return null
+  }
+}
+
+export async function getAllReviews(): Promise<Review[]> {
+  try {
+    const reviews = await sql`
+      SELECT r.*, p.name as product_name, p.slug as product_slug
+      FROM reviews r
+      JOIN products p ON r.product_id = p.id
+      ORDER BY r.created_at DESC
+    `
+    return reviews as Review[]
+  } catch (error) {
+    console.error("[v0] Error fetching all reviews:", error)
+    return []
+  }
+}
+
+export async function updateOrderDeliveryStatus(orderId: number, status: string): Promise<boolean> {
+  try {
+    await sql`
+      UPDATE orders SET delivery_status = ${status} WHERE id = ${orderId}
+    `
+    return true
+  } catch (error) {
+    console.error("[v0] Error updating delivery status:", error)
     return false
   }
 }
