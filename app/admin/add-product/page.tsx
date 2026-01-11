@@ -30,6 +30,8 @@ interface ProductFormData {
 export default function AddProductPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [newFeature, setNewFeature] = useState('')
+  const [categories, setCategories] = useState([])
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
@@ -45,7 +47,22 @@ export default function AddProductPage() {
 
   useEffect(() => {
     checkAuth()
+    fetchCategories()
   }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (response.ok) {
+        const cats = await response.json()
+        setCategories(cats)
+      } else {
+        console.error('Failed to fetch categories')
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+    }
+  }
 
   const checkAuth = () => {
     const session = localStorage.getItem('admin_session')
@@ -70,9 +87,53 @@ export default function AddProductPage() {
     }
   }
 
+  const addFeature = () => {
+    if (newFeature.trim()) {
+      setFormData(prev => ({ ...prev, features: [...prev.features, newFeature.trim()] }))
+      setNewFeature('')
+    }
+  }
+
+  const removeFeature = (index: number) => {
+    setFormData(prev => ({ ...prev, features: prev.features.filter((_, i) => i !== index) }))
+  }
+
+  const updateFeature = (index: number, value: string) => {
+    setFormData(prev => ({ ...prev, features: prev.features.map((f, i) => i === index ? value : f) }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    // Validation
+    if (!formData.name.trim() || !formData.description.trim() || !formData.price.trim() || !formData.category_id || !formData.stock.trim()) {
+      alert('Please fill all required fields')
+      setLoading(false)
+      return
+    }
+
+    const priceNum = parseFloat(formData.price)
+    const categoryIdNum = parseInt(formData.category_id)
+    const stockNum = parseInt(formData.stock)
+
+    if (isNaN(priceNum) || priceNum <= 0) {
+      alert('Please enter a valid price greater than 0')
+      setLoading(false)
+      return
+    }
+
+    if (isNaN(categoryIdNum) || categoryIdNum <= 0) {
+      alert('Please select a valid category')
+      setLoading(false)
+      return
+    }
+
+    if (isNaN(stockNum) || stockNum < 0) {
+      alert('Please enter a valid stock quantity (0 or more)')
+      setLoading(false)
+      return
+    }
 
     try {
       // Generate unique slug from name
@@ -93,14 +154,16 @@ export default function AddProductPage() {
         body: JSON.stringify({
           ...formData,
           slug,
-          price: parseFloat(formData.price),
-          category_id: parseInt(formData.category_id),
-          stock: parseInt(formData.stock),
+          price: priceNum,
+          category_id: categoryIdNum,
+          stock: stockNum,
           is_mithila_thing: formData.is_mithila_thing,
         }),
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error:', response.status, errorText)
         throw new Error('Failed to create product')
       }
 
@@ -114,11 +177,7 @@ export default function AddProductPage() {
   }
 
   const handleInputChange = (field: keyof ProductFormData, value: string | string[] | boolean) => {
-    if (field === 'features' && typeof value === 'string') {
-      setFormData(prev => ({ ...prev, [field]: value.split(',').map(f => f.trim()).filter(f => f) }))
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }))
-    }
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   return (
@@ -160,14 +219,31 @@ export default function AddProductPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="features">Features (comma-separated)</Label>
-                  <Textarea
-                    id="features"
-                    value={formData.features.join(', ')}
-                    onChange={(e) => handleInputChange('features', e.target.value.split(',').map(f => f.trim()).filter(f => f))}
-                    placeholder="Enter features separated by commas (e.g., Waterproof, Long battery life, Premium quality)"
-                    rows={3}
-                  />
+                  <Label>Features</Label>
+                  <div className="space-y-2">
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={feature}
+                          onChange={(e) => updateFeature(index, e.target.value)}
+                          placeholder="Feature"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={() => removeFeature(index)}>
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newFeature}
+                        onChange={(e) => setNewFeature(e.target.value)}
+                        placeholder="Add new feature"
+                      />
+                      <Button type="button" variant="outline" size="sm" onClick={addFeature}>
+                        Add
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -202,10 +278,11 @@ export default function AddProductPage() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Electronics</SelectItem>
-                      <SelectItem value="2">Hand-Mades</SelectItem>
-                      <SelectItem value="3">Watches</SelectItem>
-                      <SelectItem value="4">Clothings</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

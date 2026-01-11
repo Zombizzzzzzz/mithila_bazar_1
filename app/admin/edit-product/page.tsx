@@ -35,6 +35,8 @@ function EditProductForm() {
 
   const [loading, setLoading] = useState(false)
   const [fetchLoading, setFetchLoading] = useState(true)
+  const [newFeature, setNewFeature] = useState('')
+  const [categories, setCategories] = useState([])
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
@@ -71,14 +73,44 @@ function EditProductForm() {
         return
       }
 
-      // If authenticated, load product
+      // If authenticated, load product and categories
       if (productId) {
         loadProduct(productId)
       }
+      fetchCategories()
     } catch (error) {
       localStorage.removeItem('admin_session')
       router.push('/admin/login')
     }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (response.ok) {
+        const cats = await response.json()
+        setCategories(cats)
+      } else {
+        console.error('Failed to fetch categories')
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+    }
+  }
+
+  const addFeature = () => {
+    if (newFeature.trim()) {
+      setFormData(prev => ({ ...prev, features: [...prev.features, newFeature.trim()] }))
+      setNewFeature('')
+    }
+  }
+
+  const removeFeature = (index: number) => {
+    setFormData(prev => ({ ...prev, features: prev.features.filter((_, i) => i !== index) }))
+  }
+
+  const updateFeature = (index: number, value: string) => {
+    setFormData(prev => ({ ...prev, features: prev.features.map((f, i) => i === index ? value : f) }))
   }
 
   const loadProduct = async (id: string) => {
@@ -99,7 +131,7 @@ function EditProductForm() {
         videos: product.videos || [],
         stock: product.stock.toString(),
         is_mithila_thing: product.is_mithila_thing || false,
-        features: product.features || [],
+        features: Array.isArray(product.features) ? product.features : (typeof product.features === 'string' ? product.features.split(',').map(f => f.trim()).filter(f => f) : []),
       })
     } catch (error) {
       console.error('Error loading product:', error)
@@ -144,11 +176,7 @@ function EditProductForm() {
   }
 
   const handleInputChange = (field: keyof ProductFormData, value: string | string[] | boolean) => {
-    if (field === 'features' && typeof value === 'string') {
-      setFormData(prev => ({ ...prev, [field]: value.split(',').map(f => f.trim()).filter(f => f) }))
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }))
-    }
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   if (fetchLoading) {
@@ -201,14 +229,31 @@ function EditProductForm() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="features">Features (comma-separated)</Label>
-                  <Textarea
-                    id="features"
-                    value={formData.features.join(', ')}
-                    onChange={(e) => handleInputChange('features', e.target.value.split(',').map(f => f.trim()).filter(f => f))}
-                    placeholder="Enter features separated by commas (e.g., Waterproof, Long battery life, Premium quality)"
-                    rows={3}
-                  />
+                  <Label>Features</Label>
+                  <div className="space-y-2">
+                    {formData.features.map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={feature}
+                          onChange={(e) => updateFeature(index, e.target.value)}
+                          placeholder="Feature"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={() => removeFeature(index)}>
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newFeature}
+                        onChange={(e) => setNewFeature(e.target.value)}
+                        placeholder="Add new feature"
+                      />
+                      <Button type="button" variant="outline" size="sm" onClick={addFeature}>
+                        Add
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -243,10 +288,11 @@ function EditProductForm() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Electronics</SelectItem>
-                      <SelectItem value="2">Hand-Mades</SelectItem>
-                      <SelectItem value="3">Watches</SelectItem>
-                      <SelectItem value="4">Clothings</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
