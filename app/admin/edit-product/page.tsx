@@ -131,7 +131,7 @@ function EditProductForm() {
         videos: product.videos || [],
         stock: product.stock.toString(),
         is_mithila_thing: product.is_mithila_thing || false,
-        features: Array.isArray(product.features) ? product.features : (typeof product.features === 'string' ? product.features.split(',').map(f => f.trim()).filter(f => f) : []),
+        features: Array.isArray(product.features) ? product.features : [],
       })
     } catch (error) {
       console.error('Error loading product:', error)
