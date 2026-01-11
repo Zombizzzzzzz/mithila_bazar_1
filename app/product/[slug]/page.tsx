@@ -19,7 +19,7 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedVariant, setSelectedVariant] = useState<{ color: string; price: number } | null>(null)
+  const [selectedVariant, setSelectedVariant] = useState<{ color: string; price: string | number } | null>(null)
   const [selectedSize, setSelectedSize] = useState<string>('')
 
   useEffect(() => {
