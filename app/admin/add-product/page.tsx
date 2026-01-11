@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { VideoUpload } from '@/components/video-upload'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { Category } from '@/lib/db'
 
 interface ProductFormData {
   name: string
@@ -31,7 +32,7 @@ export default function AddProductPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [newFeature, setNewFeature] = useState('')
-  const [categories, setCategories] = useState([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',

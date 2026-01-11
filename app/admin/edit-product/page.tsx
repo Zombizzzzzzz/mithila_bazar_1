@@ -13,7 +13,7 @@ import { VideoUpload } from '@/components/video-upload'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { Product } from '@/lib/db'
+import { Product, Category } from '@/lib/db'
 
 interface ProductFormData {
   name: string
@@ -36,7 +36,7 @@ function EditProductForm() {
   const [loading, setLoading] = useState(false)
   const [fetchLoading, setFetchLoading] = useState(true)
   const [newFeature, setNewFeature] = useState('')
-  const [categories, setCategories] = useState([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
