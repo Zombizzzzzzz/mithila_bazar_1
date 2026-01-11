@@ -33,6 +33,8 @@ export interface Product {
   sales_count: number
   created_at: Date
   is_mithila_thing?: boolean
+  color_variants?: { color: string; price: string | number }[]
+  sizes?: string[]
 }
 
 export interface Order {

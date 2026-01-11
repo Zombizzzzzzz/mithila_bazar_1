@@ -15,15 +15,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, slug, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features } = body
+    const { name, slug, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features, color_variants, sizes } = body
 
     if (!name || !slug || !description || !price || !category_id || stock === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     const result = await sql`
-      INSERT INTO products (name, slug, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features)
-      VALUES (${name}, ${slug}, ${description}, ${price}, ${category_id}, ${image_url}, ${images || []}, ${videos || []}, ${stock}, ${is_mithila_thing || false}, ${features || []})
+      INSERT INTO products (name, slug, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features, color_variants, sizes)
+      VALUES (${name}, ${slug}, ${description}, ${price}, ${category_id}, ${image_url}, ${images || []}, ${videos || []}, ${stock}, ${is_mithila_thing || false}, ${JSON.stringify(features || [])}, ${color_variants ? JSON.stringify(color_variants) : null}, ${sizes ? JSON.stringify(sizes) : null})
       RETURNING *
     `
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { id, name, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features } = body
+    const { id, name, description, price, category_id, image_url, images, videos, stock, is_mithila_thing, features, color_variants, sizes } = body
 
     if (!id) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 })
@@ -47,7 +47,7 @@ export async function PUT(request: Request) {
       UPDATE products
       SET name = ${name}, description = ${description}, price = ${price}, category_id = ${category_id},
           image_url = ${image_url}, images = ${images || []}, videos = ${videos || []}, stock = ${stock},
-          is_mithila_thing = ${is_mithila_thing || false}, features = ${features || []}
+          is_mithila_thing = ${is_mithila_thing || false}, features = ${JSON.stringify(features || [])}, color_variants = ${color_variants ? JSON.stringify(color_variants) : null}, sizes = ${sizes ? JSON.stringify(sizes) : null}
       WHERE id = ${id}
       RETURNING *
     `

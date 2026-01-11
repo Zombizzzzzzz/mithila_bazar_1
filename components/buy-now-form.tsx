@@ -16,9 +16,11 @@ interface BuyNowFormProps {
   productName: string
   price: number
   stock: number
+  selectedVariant?: { color: string; price: string | number } | null
+  selectedSize?: string
 }
 
-export function BuyNowForm({ productId, productName, price, stock }: BuyNowFormProps) {
+export function BuyNowForm({ productId, productName, price, stock, selectedVariant, selectedSize }: BuyNowFormProps) {
   const router = useRouter()
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,7 +56,9 @@ export function BuyNowForm({ productId, productName, price, stock }: BuyNowFormP
         body: JSON.stringify({
           product_id: productId,
           ...formData,
-          total_amount: price * formData.quantity
+          total_amount: price * formData.quantity,
+          selected_variant: selectedVariant,
+          selected_size: selectedSize
         }),
       })
 

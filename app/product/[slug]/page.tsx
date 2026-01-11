@@ -19,6 +19,8 @@ export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedVariant, setSelectedVariant] = useState<{ color: string; price: number } | null>(null)
+  const [selectedSize, setSelectedSize] = useState<string>('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,6 +34,14 @@ export default function ProductPage() {
         setProduct(productData)
         const reviewsData = await getReviewsByProductId(productData.id)
         setReviews(reviewsData)
+
+        // Set default selections
+        if (productData.color_variants && productData.color_variants.length > 0) {
+          setSelectedVariant(productData.color_variants[0])
+        }
+        if (productData.sizes && productData.sizes.length > 0) {
+          setSelectedSize(productData.sizes[0])
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
         notFound()
@@ -45,9 +55,13 @@ export default function ProductPage() {
     }
   }, [slug])
 
-  const handleReviewSubmitted = () => {
-    // Refresh reviews
-    getReviewsByProductId(product?.id || 0).then(setReviews)
+  const currentPrice = selectedVariant ? parseFloat(selectedVariant.price.toString()) : (product ? parseFloat(product.price.toString()) : 0)
+
+  const handleReviewSubmitted = async () => {
+    if (product) {
+      const reviewsData = await getReviewsByProductId(product.id)
+      setReviews(reviewsData)
+    }
   }
 
   if (loading) {
@@ -84,11 +98,55 @@ export default function ProductPage() {
             <h1 className="font-serif text-4xl font-bold leading-tight text-foreground lg:text-5xl">{product.name}</h1>
 
             <div className="flex items-center gap-4">
-              <span className="font-serif text-3xl font-bold text-foreground">रु {Number(product.price).toFixed(2)}</span>
+              <span className="font-serif text-3xl font-bold text-foreground">रु {currentPrice.toFixed(2)}</span>
               <Badge variant="secondary" className="text-sm">
                 {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
               </Badge>
             </div>
+
+            {/* Color Variants */}
+            {product.color_variants && product.color_variants.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Color</label>
+                <div className="flex flex-wrap gap-2">
+                  {product.color_variants.map((variant, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedVariant(variant)}
+                      className={`px-3 py-1 border rounded-md text-sm ${
+                        selectedVariant?.color === variant.color
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {variant.color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sizes */}
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Size</label>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-3 py-1 border rounded-md text-sm ${
+                        selectedSize === size
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <p className="text-lg leading-relaxed text-muted-foreground">{product.description}</p>
 
@@ -125,8 +183,10 @@ export default function ProductPage() {
                 <BuyNowForm
                   productId={product.id}
                   productName={product.name}
-                  price={product.price}
+                  price={currentPrice}
                   stock={product.stock}
+                  selectedVariant={selectedVariant}
+                  selectedSize={selectedSize}
                 />
               </div>
             </div>

@@ -26,12 +26,17 @@ interface ProductFormData {
   stock: string
   is_mithila_thing: boolean
   features: string[]
+  color_variants: { color: string; price: string }[]
+  sizes: string[]
 }
 
 export default function AddProductPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [newFeature, setNewFeature] = useState('')
+  const [newVariantColor, setNewVariantColor] = useState('')
+  const [newVariantPrice, setNewVariantPrice] = useState('')
+  const [newSize, setNewSize] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -44,6 +49,8 @@ export default function AddProductPage() {
     stock: '',
     is_mithila_thing: false,
     features: [],
+    color_variants: [],
+    sizes: [],
   })
 
   useEffect(() => {
@@ -101,6 +108,32 @@ export default function AddProductPage() {
 
   const updateFeature = (index: number, value: string) => {
     setFormData(prev => ({ ...prev, features: prev.features.map((f, i) => i === index ? value : f) }))
+  }
+
+  const addVariant = () => {
+    if (newVariantColor.trim() && newVariantPrice.trim()) {
+      const priceNum = parseFloat(newVariantPrice)
+      if (!isNaN(priceNum)) {
+        setFormData(prev => ({ ...prev, color_variants: [...prev.color_variants, { color: newVariantColor.trim(), price: newVariantPrice.trim() }] }))
+        setNewVariantColor('')
+        setNewVariantPrice('')
+      }
+    }
+  }
+
+  const removeVariant = (index: number) => {
+    setFormData(prev => ({ ...prev, color_variants: prev.color_variants.filter((_, i) => i !== index) }))
+  }
+
+  const addSize = () => {
+    if (newSize.trim()) {
+      setFormData(prev => ({ ...prev, sizes: [...prev.sizes, newSize.trim()] }))
+      setNewSize('')
+    }
+  }
+
+  const removeSize = (index: number) => {
+    setFormData(prev => ({ ...prev, sizes: prev.sizes.filter((_, i) => i !== index) }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -287,6 +320,82 @@ export default function AddProductPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {categories.find(cat => cat.id.toString() === formData.category_id)?.slug === 'watches' && (
+                  <div className="md:col-span-2">
+                    <Label>Color Variants (optional)</Label>
+                    <div className="space-y-2">
+                      {formData.color_variants.map((variant, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={variant.color}
+                            onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, color: e.target.value } : v) }))}
+                            placeholder="Color"
+                          />
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={variant.price}
+                            onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, price: e.target.value } : v) }))}
+                            placeholder="Price"
+                          />
+                          <Button type="button" variant="outline" size="sm" onClick={() => removeVariant(index)}>
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={newVariantColor}
+                          onChange={(e) => setNewVariantColor(e.target.value)}
+                          placeholder="Color"
+                        />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={newVariantPrice}
+                          onChange={(e) => setNewVariantPrice(e.target.value)}
+                          placeholder="Price"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addVariant}>
+                          Add Variant
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {categories.find(cat => cat.id.toString() === formData.category_id)?.slug === 'clothings' && (
+                  <div className="md:col-span-2">
+                    <Label>Sizes</Label>
+                    <div className="space-y-2">
+                      {formData.sizes.map((size, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={size}
+                            onChange={(e) => setFormData(prev => ({ ...prev, sizes: prev.sizes.map((s, i) => i === index ? e.target.value : s) }))}
+                            placeholder="Size"
+                          />
+                          <Button type="button" variant="outline" size="sm" onClick={() => removeSize(index)}>
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={newSize}
+                          onChange={(e) => setNewSize(e.target.value)}
+                          placeholder="Add new size"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addSize}>
+                          Add Size
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
