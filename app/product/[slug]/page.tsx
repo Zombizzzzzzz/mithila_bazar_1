@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { getProductBySlug, getProducts, createOrder, incrementProductSales, getReviewsByProductId } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
 import Image from "next/image"
@@ -89,13 +90,15 @@ export default function ProductPage() {
 
   const handleContactSeller = () => {
     if (!session) {
-      // Redirect to login if not authenticated
-      router.push('/?login=true')
+      // Redirect to home page with login prompt
+      router.push('/?login=true&redirect=' + encodeURIComponent(`/chat?product=${product?.id || ''}`))
       return
     }
 
+    if (!product) return
+
     // Redirect to chat page with product context
-    router.push(`/chat?product=${product?.id}`)
+    router.push(`/chat?product=${product.id}`)
   }
 
   if (loading) {

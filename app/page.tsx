@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { GSAPReveal } from "@/components/gsap-reveal" // Added GSAP reveal
 import { GlobalSearch } from "@/components/global-search"
+import { LoginPrompt } from "@/components/login-prompt"
 
   export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function HomePage() {
 
   return (
     <main>
+      <LoginPrompt />
      
      {/* Featured Products */}
       <section id="featured" className="container mx-auto px-4 py-16">

@@ -48,7 +48,9 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/')
+      // Redirect to home page with login prompt and current URL as redirect
+      const currentUrl = encodeURIComponent(window.location.pathname + window.location.search)
+      router.push(`/?login=true&redirect=${currentUrl}`)
       return
     }
 
@@ -65,7 +67,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     // If we have a product from URL and chats are loaded, try to find or create conversation
-    if (productFromUrl && chats.length >= 0 && !loading) {
+    if (productFromUrl && !loading) {
       const existingChat = chats.find(chat => chat.product_id === parseInt(productFromUrl))
       if (existingChat) {
         fetchMessages(existingChat)
@@ -145,18 +147,27 @@ export default function ChatPage() {
 
       if (response.ok) {
         setNewMessage('')
-        // For new conversations, refresh chats and select the newly created chat
+        // Refresh chats list
         await fetchChats()
-        // Find the newly created chat
-        const updatedChatsResponse = await fetch('/api/messages/customer/chats')
-        if (updatedChatsResponse.ok) {
-          const updatedData = await updatedChatsResponse.json()
-          const newChat = updatedData.chats.find((chat: Chat) => chat.product_id === selectedChat.product_id)
-          if (newChat) {
-            setSelectedChat(newChat)
-            fetchMessages(newChat)
+
+        // If this was a placeholder chat (customer_id === 0), try to find the real chat
+        if (selectedChat.customer_id === 0) {
+          const customerChatsResponse = await fetch('/api/messages/customer/chats')
+          if (customerChatsResponse.ok) {
+            const customerData = await customerChatsResponse.json()
+            const realChat = customerData.chats.find((chat: Chat) => chat.product_id === selectedChat.product_id)
+            if (realChat) {
+              setSelectedChat(realChat)
+              fetchMessages(realChat)
+              return
+            }
           }
         }
+
+        // For existing chats, just refresh messages
+        fetchMessages(selectedChat)
+      } else {
+        console.error('Failed to send message')
       }
     } catch (error) {
       console.error('Error sending message:', error)
