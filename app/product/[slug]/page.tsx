@@ -94,9 +94,8 @@ export default function ProductPage() {
       return
     }
 
-    // Open chat modal or redirect to chat page with product context
-    // For now, redirect to chat page
-    router.push('/chat')
+    // Redirect to chat page with product context
+    router.push(`/chat?product=${product?.id}`)
   }
 
   if (loading) {

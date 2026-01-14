@@ -44,6 +44,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [productFromUrl, setProductFromUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -52,9 +53,28 @@ export default function ChatPage() {
     }
 
     if (status === 'authenticated') {
+      // Get product ID from URL if present
+      const urlParams = new URLSearchParams(window.location.search)
+      const productId = urlParams.get('product')
+      if (productId) {
+        setProductFromUrl(productId)
+      }
       fetchChats()
     }
   }, [status, router])
+
+  useEffect(() => {
+    // If we have a product from URL and chats are loaded, try to find or create conversation
+    if (productFromUrl && chats.length >= 0 && !loading) {
+      const existingChat = chats.find(chat => chat.product_id === parseInt(productFromUrl))
+      if (existingChat) {
+        fetchMessages(existingChat)
+      } else {
+        // Create a placeholder chat for new conversation
+        createPlaceholderChat(productFromUrl)
+      }
+    }
+  }, [productFromUrl, chats, loading])
 
   const fetchChats = async () => {
     try {
@@ -83,6 +103,31 @@ export default function ChatPage() {
     }
   }
 
+  const createPlaceholderChat = async (productId: string) => {
+    try {
+      // Fetch product details to create placeholder chat
+      const response = await fetch(`/api/products/${productId}`)
+      if (response.ok) {
+        const product = await response.json()
+        const placeholderChat: Chat = {
+          product_id: parseInt(productId),
+          customer_id: 0, // Will be set when message is sent
+          product_name: product.name,
+          product_slug: product.slug,
+          customer_name: session?.user?.name || '',
+          customer_email: session?.user?.email || '',
+          last_message: '',
+          last_message_time: new Date(),
+          unread_count: 0
+        }
+        setSelectedChat(placeholderChat)
+        setMessages([]) // Empty messages for new conversation
+      }
+    } catch (error) {
+      console.error('Error creating placeholder chat:', error)
+    }
+  }
+
   const sendMessage = async () => {
     if (!selectedChat || !newMessage.trim()) return
 
@@ -100,10 +145,18 @@ export default function ChatPage() {
 
       if (response.ok) {
         setNewMessage('')
-        // Refresh messages
-        fetchMessages(selectedChat)
-        // Refresh chats list
-        fetchChats()
+        // For new conversations, refresh chats and select the newly created chat
+        await fetchChats()
+        // Find the newly created chat
+        const updatedChatsResponse = await fetch('/api/messages/customer/chats')
+        if (updatedChatsResponse.ok) {
+          const updatedData = await updatedChatsResponse.json()
+          const newChat = updatedData.chats.find((chat: Chat) => chat.product_id === selectedChat.product_id)
+          if (newChat) {
+            setSelectedChat(newChat)
+            fetchMessages(newChat)
+          }
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error)
@@ -231,7 +284,12 @@ export default function ChatPage() {
             <Card className="h-[600px] flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Select a conversation to view messages</p>
+                <p className="mb-2">
+                  {productFromUrl ? 'Start a conversation about this product' : 'Select a conversation to view messages'}
+                </p>
+                {productFromUrl && (
+                  <p className="text-sm">Type your message below to begin chatting with the seller.</p>
+                )}
               </div>
             </Card>
           )}
