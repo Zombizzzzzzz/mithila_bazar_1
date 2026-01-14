@@ -89,7 +89,9 @@ export async function POST(request: Request) {
       delivery_address,
       delivery_city,
       quantity,
-      total_amount
+      total_amount,
+      selected_variant,
+      selected_size
     } = body
 
     // Validate required fields
@@ -106,7 +108,9 @@ export async function POST(request: Request) {
       delivery_address,
       delivery_city,
       quantity: parseInt(quantity),
-      total_amount: parseFloat(total_amount)
+      total_amount: parseFloat(total_amount),
+      selected_variant,
+      selected_size
     })
 
     if (!order) {

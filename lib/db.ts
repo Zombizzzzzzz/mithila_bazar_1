@@ -33,7 +33,7 @@ export interface Product {
   sales_count: number
   created_at: Date
   is_mithila_thing?: boolean
-  color_variants?: { color: string; price: string | number }[]
+  color_variants?: { color: string; price: string | number; stock?: number }[]
   sizes?: string[]
 }
 
@@ -51,6 +51,8 @@ export interface Order {
   payment_method: string
   delivery_status?: string
   created_at: Date
+  selected_variant?: any
+  selected_size?: string
   product_name?: string
   product_slug?: string
   product_image?: string
@@ -65,6 +67,19 @@ export interface Review {
   customer_email?: string
   rating: number
   comment?: string
+  created_at: Date
+  updated_at: Date
+}
+
+export interface Message {
+  id: number
+  product_id: number
+  customer_id: number
+  admin_id?: number
+  message: string
+  is_from_customer: boolean
+  is_read_by_admin: boolean
+  is_read_by_customer: boolean
   created_at: Date
   updated_at: Date
 }
@@ -212,10 +227,12 @@ export async function createOrder(orderData: {
   delivery_city: string
   quantity: number
   total_amount: number
+  selected_variant?: any
+  selected_size?: string
 }): Promise<Order | null> {
   try {
     const orders = await sql`
-      INSERT INTO orders (product_id, customer_id, customer_name, customer_phone, delivery_address, delivery_city, quantity, total_amount)
+      INSERT INTO orders (product_id, customer_id, customer_name, customer_phone, delivery_address, delivery_city, quantity, total_amount, selected_variant, selected_size)
       VALUES (
         ${orderData.product_id},
         ${orderData.customer_id ?? null},
@@ -224,7 +241,9 @@ export async function createOrder(orderData: {
         ${orderData.delivery_address},
         ${orderData.delivery_city},
         ${orderData.quantity},
-        ${orderData.total_amount}
+        ${orderData.total_amount},
+        ${orderData.selected_variant ? JSON.stringify(orderData.selected_variant) : null},
+        ${orderData.selected_size ?? null}
       )
       RETURNING *
     `
@@ -251,6 +270,8 @@ export async function getOrders(): Promise<(Order & { product_name?: string; pro
         o.order_status,
         o.payment_method,
         o.created_at,
+        o.selected_variant,
+        o.selected_size,
         p.name as product_name,
         p.slug as product_slug,
         p.image_url as product_image
@@ -281,6 +302,8 @@ export async function getOrdersByCustomer(customerId: number): Promise<(Order & 
         o.order_status,
         o.payment_method,
         o.created_at,
+        o.selected_variant,
+        o.selected_size,
         p.name as product_name,
         p.slug as product_slug,
         p.image_url as product_image
@@ -405,6 +428,105 @@ export async function getAllReviews(): Promise<Review[]> {
   } catch (error) {
     console.error("[v0] Error fetching all reviews:", error)
     return []
+  }
+}
+
+// Message functions
+export async function createMessage(messageData: {
+  product_id: number
+  customer_id: number
+  admin_id?: number
+  message: string
+  is_from_customer: boolean
+}): Promise<Message | null> {
+  try {
+    const result = await sql`
+      INSERT INTO messages (product_id, customer_id, admin_id, message, is_from_customer)
+      VALUES (${messageData.product_id}, ${messageData.customer_id}, ${messageData.admin_id || null}, ${messageData.message}, ${messageData.is_from_customer})
+      RETURNING *
+    `
+    return result[0] as Message
+  } catch (error) {
+    console.error("[v0] Error creating message:", error)
+    return null
+  }
+}
+
+export async function getMessagesForProductAndCustomer(productId: number, customerId: number): Promise<Message[]> {
+  try {
+    const messages = await sql`
+      SELECT m.*, c.name as customer_name, a.email as admin_email
+      FROM messages m
+      LEFT JOIN customers c ON m.customer_id = c.id
+      LEFT JOIN admins a ON m.admin_id = a.id
+      WHERE m.product_id = ${productId} AND m.customer_id = ${customerId}
+      ORDER BY m.created_at ASC
+    `
+    return messages as Message[]
+  } catch (error) {
+    console.error("[v0] Error fetching messages:", error)
+    return []
+  }
+}
+
+export async function getAllCustomerChats(): Promise<Array<{
+  product_id: number
+  customer_id: number
+  product_name: string
+  product_slug: string
+  customer_name: string
+  customer_email: string
+  last_message: string
+  last_message_time: Date
+  unread_count: number
+}>> {
+  try {
+    const chats = await sql`
+      SELECT
+        m.product_id,
+        m.customer_id,
+        p.name as product_name,
+        p.slug as product_slug,
+        c.name as customer_name,
+        c.email as customer_email,
+        m.message as last_message,
+        m.created_at as last_message_time,
+        COUNT(CASE WHEN m.is_from_customer = true AND m.is_read_by_admin = false THEN 1 END) as unread_count
+      FROM messages m
+      JOIN products p ON m.product_id = p.id
+      JOIN customers c ON m.customer_id = c.id
+      WHERE m.created_at = (
+        SELECT MAX(created_at)
+        FROM messages m2
+        WHERE m2.product_id = m.product_id AND m2.customer_id = m.customer_id
+      )
+      GROUP BY m.product_id, m.customer_id, p.name, p.slug, c.name, c.email, m.message, m.created_at
+      ORDER BY m.created_at DESC
+    `
+    return chats as any[]
+  } catch (error) {
+    console.error("[v0] Error fetching customer chats:", error)
+    return []
+  }
+}
+
+export async function markMessagesAsRead(productId: number, customerId: number, isAdmin: boolean): Promise<void> {
+  try {
+    if (isAdmin) {
+      await sql`
+        UPDATE messages
+        SET is_read_by_admin = true, updated_at = CURRENT_TIMESTAMP
+        WHERE product_id = ${productId} AND customer_id = ${customerId} AND is_from_customer = true
+      `
+    } else {
+      await sql`
+        UPDATE messages
+        SET is_read_by_customer = true, updated_at = CURRENT_TIMESTAMP
+        WHERE product_id = ${productId} AND customer_id = ${customerId} AND is_from_customer = false
+      `
+    }
+  } catch (error) {
+    console.error("[v0] Error marking messages as read:", error)
   }
 }
 

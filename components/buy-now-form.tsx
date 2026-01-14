@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Truck, MapPin, Phone, User, Package } from 'lucide-react'
 import { toast } from 'sonner'
@@ -18,12 +19,21 @@ interface BuyNowFormProps {
   stock: number
   selectedVariant?: { color: string; price: string | number } | null
   selectedSize?: string
+  colorVariants?: { color: string; price: string | number; stock?: number }[]
+  sizes?: string[]
+  onOrderSuccess?: () => void
 }
 
-export function BuyNowForm({ productId, productName, price, stock, selectedVariant, selectedSize }: BuyNowFormProps) {
+export function BuyNowForm({ productId, productName, price, stock, selectedVariant, selectedSize, colorVariants, sizes, onOrderSuccess }: BuyNowFormProps) {
   const router = useRouter()
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [freshProductData, setFreshProductData] = useState<{
+    stock: number
+    color_variants?: { color: string; price: string | number; stock?: number }[]
+  } | null>(null)
+  const [formSelectedVariant, setFormSelectedVariant] = useState<{ color: string; price: string | number; stock?: number } | null>(selectedVariant || null)
+  const [formSelectedSize, setFormSelectedSize] = useState<string>(selectedSize || '')
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_phone: '',
@@ -31,6 +41,34 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
     delivery_city: '',
     quantity: 1
   })
+
+  // Fetch fresh product data when component mounts
+  useEffect(() => {
+    const fetchFreshProductData = async () => {
+      try {
+        const response = await fetch(`/api/products/${productId}`)
+        if (response.ok) {
+          const product = await response.json()
+          setFreshProductData({
+            stock: product.stock,
+            color_variants: product.color_variants?.map((v: any) => ({
+              ...v,
+              stock: typeof v.stock === 'number' ? v.stock : parseInt(String(v.stock || 0))
+            }))
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch fresh product data:', error)
+      }
+    }
+
+    fetchFreshProductData()
+  }, [productId])
+
+  const currentPrice = formSelectedVariant ? parseFloat(formSelectedVariant.price.toString()) : price
+  const currentStock = freshProductData?.stock || stock
+  const currentColorVariants = freshProductData?.color_variants || colorVariants
+  const availableStock = formSelectedVariant ? (currentColorVariants?.find(v => v.color === formSelectedVariant.color)?.stock ?? currentStock) : currentStock
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,8 +78,8 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
       return
     }
 
-    if (formData.quantity > stock) {
-      toast.error('Not enough stock available')
+    if (formData.quantity > availableStock) {
+      toast.error('Not enough stock available for selected variant')
       return
     }
 
@@ -56,14 +94,15 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
         body: JSON.stringify({
           product_id: productId,
           ...formData,
-          total_amount: price * formData.quantity,
-          selected_variant: selectedVariant,
-          selected_size: selectedSize
+          total_amount: currentPrice * formData.quantity,
+          selected_variant: formSelectedVariant,
+          selected_size: formSelectedSize
         }),
       })
 
       if (response.ok) {
         toast.success('Order placed successfully! We will deliver to your address.')
+        onOrderSuccess?.()
         router.push('/thank-you')
       } else {
         toast.error('Failed to place order. Please try again.')
@@ -154,6 +193,47 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
             />
           </div>
 
+          {/* Color Variant Selection */}
+          {currentColorVariants && currentColorVariants.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="variant">Color Variant</Label>
+              <Select value={formSelectedVariant?.color || ''} onValueChange={(value) => {
+                const variant = currentColorVariants.find(v => v.color === value)
+                setFormSelectedVariant(variant || null)
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a color" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentColorVariants.map((variant) => (
+                    <SelectItem key={variant.color} value={variant.color}>
+                      {variant.color} - रु {parseFloat(variant.price.toString()).toFixed(2)} {variant.stock !== undefined ? `(${variant.stock} in stock)` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Size Selection */}
+          {sizes && sizes.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="size">Size</Label>
+              <Select value={formSelectedSize} onValueChange={setFormSelectedSize}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sizes.map((size) => (
+                    <SelectItem key={size} value={size}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="quantity">Quantity</Label>
             <Input
@@ -161,24 +241,24 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
               name="quantity"
               type="number"
               min="1"
-              max={stock}
+              max={availableStock}
               required
               value={formData.quantity}
               onChange={handleInputChange}
             />
             <p className="text-sm text-muted-foreground">
-              Available stock: {stock} | Total: रु {(price * formData.quantity).toFixed(2)}
+              Available stock: {availableStock} {formSelectedVariant ? `(for ${formSelectedVariant.color})` : '(general)'} | Total: रु {(currentPrice * formData.quantity).toFixed(2)}
             </p>
           </div>
 
           <Button
             type="submit"
             className="w-full"
-            disabled={isSubmitting || stock === 0}
+            disabled={isSubmitting || availableStock === 0}
           >
             {isSubmitting ? (
               'Placing Order...'
-            ) : stock === 0 ? (
+            ) : availableStock === 0 ? (
               'Out of Stock'
             ) : (
               <>

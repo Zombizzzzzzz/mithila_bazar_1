@@ -26,7 +26,7 @@ interface ProductFormData {
   stock: string
   is_mithila_thing: boolean
   features: string[]
-  color_variants: { color: string; price: string }[]
+  color_variants: { color: string; price: string; stock: string }[]
   sizes: string[]
 }
 
@@ -36,6 +36,7 @@ export default function AddProductPage() {
   const [newFeature, setNewFeature] = useState('')
   const [newVariantColor, setNewVariantColor] = useState('')
   const [newVariantPrice, setNewVariantPrice] = useState('')
+  const [newVariantStock, setNewVariantStock] = useState('')
   const [newSize, setNewSize] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<ProductFormData>({
@@ -111,12 +112,14 @@ export default function AddProductPage() {
   }
 
   const addVariant = () => {
-    if (newVariantColor.trim() && newVariantPrice.trim()) {
+    if (newVariantColor.trim() && newVariantPrice.trim() && newVariantStock.trim()) {
       const priceNum = parseFloat(newVariantPrice)
-      if (!isNaN(priceNum)) {
-        setFormData(prev => ({ ...prev, color_variants: [...prev.color_variants, { color: newVariantColor.trim(), price: newVariantPrice.trim() }] }))
+      const stockNum = parseInt(newVariantStock)
+      if (!isNaN(priceNum) && !isNaN(stockNum) && stockNum >= 0) {
+        setFormData(prev => ({ ...prev, color_variants: [...prev.color_variants, { color: newVariantColor.trim(), price: newVariantPrice.trim(), stock: newVariantStock.trim() }] }))
         setNewVariantColor('')
         setNewVariantPrice('')
+        setNewVariantStock('')
       }
     }
   }
@@ -253,6 +256,18 @@ export default function AddProductPage() {
                 </div>
 
                 <div className="md:col-span-2">
+                  <Label htmlFor="stock">Total Stock Quantity</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    min="0"
+                    value={formData.stock}
+                    onChange={(e) => handleInputChange('stock', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
                   <Label>Features</Label>
                   <div className="space-y-2">
                     {formData.features.map((feature, index) => (
@@ -294,18 +309,6 @@ export default function AddProductPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="stock">Stock Quantity</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    min="0"
-                    value={formData.stock}
-                    onChange={(e) => handleInputChange('stock', e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
                   <Label htmlFor="category">Category</Label>
                   <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
                     <SelectTrigger>
@@ -340,6 +343,13 @@ export default function AddProductPage() {
                             onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, price: e.target.value } : v) }))}
                             placeholder="Price"
                           />
+                          <Input
+                            type="number"
+                            min="0"
+                            value={variant.stock || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, stock: e.target.value } : v) }))}
+                            placeholder="Stock"
+                          />
                           <Button type="button" variant="outline" size="sm" onClick={() => removeVariant(index)}>
                             Remove
                           </Button>
@@ -358,6 +368,13 @@ export default function AddProductPage() {
                           value={newVariantPrice}
                           onChange={(e) => setNewVariantPrice(e.target.value)}
                           placeholder="Price"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          value={newVariantStock}
+                          onChange={(e) => setNewVariantStock(e.target.value)}
+                          placeholder="Stock"
                         />
                         <Button type="button" variant="outline" size="sm" onClick={addVariant}>
                           Add Variant

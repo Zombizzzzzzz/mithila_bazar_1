@@ -204,6 +204,16 @@ export default function AdminOrdersPage() {
                           {order.product_name || `Product #${order.product_id}`}
                         </div>
                         <div className="text-sm text-gray-500">Qty: {order.quantity}</div>
+                        {order.selected_variant && (
+                          <div className="text-sm text-blue-600">
+                            Variant: {order.selected_variant.color} - रु {parseFloat(order.selected_variant.price?.toString() || '0').toFixed(2)}
+                          </div>
+                        )}
+                        {order.selected_size && (
+                          <div className="text-sm text-blue-600">
+                            Size: {order.selected_size}
+                          </div>
+                        )}
                         {order.product_image && (
                           <img
                             src={order.product_image}

@@ -26,7 +26,7 @@ interface ProductFormData {
   stock: string
   is_mithila_thing: boolean
   features: string[]
-  color_variants: { color: string; price: string }[]
+  color_variants: { color: string; price: string; stock: string }[]
   sizes: string[]
 }
 
@@ -40,6 +40,7 @@ function EditProductForm() {
   const [newFeature, setNewFeature] = useState('')
   const [newVariantColor, setNewVariantColor] = useState('')
   const [newVariantPrice, setNewVariantPrice] = useState('')
+  const [newVariantStock, setNewVariantStock] = useState('')
   const [newSize, setNewSize] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<ProductFormData>({
@@ -121,12 +122,14 @@ function EditProductForm() {
   }
 
   const addVariant = () => {
-    if (newVariantColor.trim() && newVariantPrice.trim()) {
+    if (newVariantColor.trim() && newVariantPrice.trim() && newVariantStock.trim()) {
       const priceNum = parseFloat(newVariantPrice)
-      if (!isNaN(priceNum)) {
-        setFormData(prev => ({ ...prev, color_variants: [...prev.color_variants, { color: newVariantColor.trim(), price: newVariantPrice.trim() }] }))
+      const stockNum = parseInt(newVariantStock)
+      if (!isNaN(priceNum) && !isNaN(stockNum) && stockNum >= 0) {
+        setFormData(prev => ({ ...prev, color_variants: [...prev.color_variants, { color: newVariantColor.trim(), price: newVariantPrice.trim(), stock: newVariantStock.trim() }] }))
         setNewVariantColor('')
         setNewVariantPrice('')
+        setNewVariantStock('')
       }
     }
   }
@@ -165,7 +168,7 @@ function EditProductForm() {
         stock: product.stock.toString(),
         is_mithila_thing: product.is_mithila_thing || false,
         features: Array.isArray(product.features) ? product.features : [],
-        color_variants: product.color_variants ? product.color_variants.map(v => ({ color: v.color, price: v.price.toString() })) : [],
+        color_variants: product.color_variants ? product.color_variants.map(v => ({ color: v.color, price: v.price.toString(), stock: v.stock?.toString() || '' })) : [],
         sizes: product.sizes || [],
       })
     } catch (error) {
@@ -193,7 +196,7 @@ function EditProductForm() {
           price: parseFloat(formData.price),
           category_id: parseInt(formData.category_id),
           stock: parseInt(formData.stock),
-          color_variants: formData.color_variants.length > 0 ? formData.color_variants.map(v => ({ color: v.color, price: parseFloat(v.price) })).filter(v => !isNaN(v.price)) : null,
+          color_variants: formData.color_variants.length > 0 ? formData.color_variants.map(v => ({ color: v.color, price: parseFloat(v.price), stock: parseInt(v.stock) || 0 })).filter(v => !isNaN(v.price)) : null,
           sizes: formData.sizes.length > 0 ? formData.sizes : null,
           is_mithila_thing: formData.is_mithila_thing,
         }),
@@ -266,6 +269,18 @@ function EditProductForm() {
                 </div>
 
                 <div className="md:col-span-2">
+                  <Label htmlFor="stock">Total Stock Quantity</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    min="0"
+                    value={formData.stock}
+                    onChange={(e) => handleInputChange('stock', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
                   <Label>Features</Label>
                   <div className="space-y-2">
                     {formData.features.map((feature, index) => (
@@ -307,18 +322,6 @@ function EditProductForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="stock">Stock Quantity</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    min="0"
-                    value={formData.stock}
-                    onChange={(e) => handleInputChange('stock', e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div>
                   <Label htmlFor="category">Category</Label>
                   <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
                     <SelectTrigger>
@@ -353,6 +356,13 @@ function EditProductForm() {
                             onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, price: e.target.value } : v) }))}
                             placeholder="Price"
                           />
+                          <Input
+                            type="number"
+                            min="0"
+                            value={variant.stock || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, stock: e.target.value } : v) }))}
+                            placeholder="Stock"
+                          />
                           <Button type="button" variant="outline" size="sm" onClick={() => removeVariant(index)}>
                             Remove
                           </Button>
@@ -371,6 +381,13 @@ function EditProductForm() {
                           value={newVariantPrice}
                           onChange={(e) => setNewVariantPrice(e.target.value)}
                           placeholder="Price"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          value={newVariantStock}
+                          onChange={(e) => setNewVariantStock(e.target.value)}
+                          placeholder="Stock"
                         />
                         <Button type="button" variant="outline" size="sm" onClick={addVariant}>
                           Add Variant

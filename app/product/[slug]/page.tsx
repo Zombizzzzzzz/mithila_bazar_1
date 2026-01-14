@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { getProductBySlug, getProducts, createOrder, incrementProductSales, getReviewsByProductId } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
 import Image from "next/image"
-import { Star, ShoppingCart, Heart, Truck, MapPin, Phone, User } from "lucide-react"
+import { Star, ShoppingCart, Heart, Truck, MapPin, Phone, User, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BuyNowForm } from "@/components/buy-now-form"
@@ -16,6 +18,8 @@ import type { Product, Review } from "@/lib/db"
 
 export default function ProductPage() {
   const { slug } = useParams() as { slug: string }
+  const { data: session } = useSession()
+  const router = useRouter()
   const [product, setProduct] = useState<Product | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,12 +60,43 @@ export default function ProductPage() {
   }, [slug])
 
   const currentPrice = selectedVariant ? parseFloat(selectedVariant.price.toString()) : (product ? parseFloat(product.price.toString()) : 0)
+  const currentStock = selectedVariant ? 
+    (product?.color_variants?.find(v => v.color === selectedVariant.color)?.stock ? 
+      parseInt(product.color_variants.find(v => v.color === selectedVariant.color)!.stock!.toString()) : 
+      product?.stock ?? 0) : 
+    (product?.stock ?? 0)
 
   const handleReviewSubmitted = async () => {
     if (product) {
       const reviewsData = await getReviewsByProductId(product.id)
       setReviews(reviewsData)
     }
+  }
+
+  const handleOrderSuccess = async () => {
+    // Refetch product data to get updated stock
+    if (slug) {
+      try {
+        const productData = await getProductBySlug(slug)
+        if (productData) {
+          setProduct(productData)
+        }
+      } catch (error) {
+        console.error('Error refreshing product data:', error)
+      }
+    }
+  }
+
+  const handleContactSeller = () => {
+    if (!session) {
+      // Redirect to login if not authenticated
+      router.push('/?login=true')
+      return
+    }
+
+    // Open chat modal or redirect to chat page with product context
+    // For now, redirect to chat page
+    router.push('/chat')
   }
 
   if (loading) {
@@ -100,9 +135,19 @@ export default function ProductPage() {
             <div className="flex items-center gap-4">
               <span className="font-serif text-3xl font-bold text-foreground">रु {currentPrice.toFixed(2)}</span>
               <Badge variant="secondary" className="text-sm">
-                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                {currentStock > 0 ? `${currentStock} in stock${selectedVariant ? ` (${selectedVariant.color})` : ''}` : 'Out of stock'}
               </Badge>
             </div>
+
+            {/* Contact Seller Button */}
+            <Button
+              onClick={handleContactSeller}
+              variant="outline"
+              className="flex items-center gap-2 w-fit"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Contact Seller
+            </Button>
 
             {/* Color Variants */}
             {product.color_variants && product.color_variants.length > 0 && (
@@ -184,9 +229,12 @@ export default function ProductPage() {
                   productId={product.id}
                   productName={product.name}
                   price={currentPrice}
-                  stock={product.stock}
+                  stock={currentStock}
                   selectedVariant={selectedVariant}
                   selectedSize={selectedSize}
+                  colorVariants={product.color_variants?.map(v => ({ ...v, stock: typeof v.stock === 'number' ? v.stock : parseInt(String(v.stock || 0)) }))}
+                  sizes={product.sizes}
+                  onOrderSuccess={handleOrderSuccess}
                 />
               </div>
             </div>
