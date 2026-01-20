@@ -27,7 +27,7 @@ interface ProductFormData {
   is_mithila_thing: boolean
   features: string[]
   color_variants: { color: string; price: string; stock: string }[]
-  sizes: { size: string; stock: string }[] | string[]
+  sizes: { size: string; stock: string }[]
 }
 
 export default function AddProductPage() {
@@ -133,12 +133,9 @@ export default function AddProductPage() {
     if (newSize.trim() && newSizeStock.trim()) {
       const stockNum = parseInt(newSizeStock)
       if (!isNaN(stockNum) && stockNum >= 0) {
-        const currentSizes = Array.isArray(formData.sizes) && formData.sizes.length > 0
-          ? formData.sizes.map(s => typeof s === 'string' ? { size: s, stock: '0' } : s)
-          : []
         setFormData(prev => ({ 
           ...prev, 
-          sizes: [...currentSizes, { size: newSize.trim(), stock: newSizeStock.trim() }] as any
+          sizes: [...prev.sizes, { size: newSize.trim(), stock: newSizeStock.trim() }]
         }))
         setNewSize('')
         setNewSizeStock('')
@@ -147,7 +144,7 @@ export default function AddProductPage() {
   }
 
   const removeSize = (index: number) => {
-    setFormData(prev => ({ ...prev, sizes: Array.isArray(prev.sizes) ? prev.sizes.filter((_, i) => i !== index) : [] }))
+    setFormData(prev => ({ ...prev, sizes: prev.sizes.filter((_, i) => i !== index) }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -403,17 +400,15 @@ export default function AddProductPage() {
                   <div className="md:col-span-2">
                     <Label>Sizes (with stock)</Label>
                     <div className="space-y-2">
-                      {Array.isArray(formData.sizes) && formData.sizes.map((size, index) => {
-                        const sizeObj = typeof size === 'string' ? { size, stock: '0' } : (size as any)
+                      {formData.sizes.map((size, index) => {
+                        const sizeObj = size as { size: string; stock: string }
                         return (
                           <div key={index} className="flex items-center gap-2">
                             <Input
                               value={sizeObj.size}
                               onChange={(e) => setFormData(prev => ({ 
                                 ...prev, 
-                                sizes: Array.isArray(prev.sizes) 
-                                  ? prev.sizes.map((s: any, i) => i === index ? { ...sizeObj, size: e.target.value } : s)
-                                  : []
+                                sizes: prev.sizes.map((s, i) => i === index ? { ...sizeObj, size: e.target.value } : s)
                               }))}
                               placeholder="Size"
                             />
@@ -423,9 +418,7 @@ export default function AddProductPage() {
                               value={sizeObj.stock}
                               onChange={(e) => setFormData(prev => ({ 
                                 ...prev, 
-                                sizes: Array.isArray(prev.sizes) 
-                                  ? prev.sizes.map((s: any, i) => i === index ? { ...sizeObj, stock: e.target.value } : s)
-                                  : []
+                                sizes: prev.sizes.map((s, i) => i === index ? { ...sizeObj, stock: e.target.value } : s)
                               }))}
                               placeholder="Stock"
                             />
