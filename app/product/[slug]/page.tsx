@@ -45,7 +45,9 @@ export default function ProductPage() {
           setSelectedVariant(productData.color_variants[0])
         }
         if (productData.sizes && productData.sizes.length > 0) {
-          setSelectedSize(productData.sizes[0])
+          const firstSize = productData.sizes[0]
+          const sizeValue = typeof firstSize === 'string' ? firstSize : (firstSize as any).size
+          setSelectedSize(sizeValue)
         }
       } catch (error) {
         console.error('Error fetching data:', error)
