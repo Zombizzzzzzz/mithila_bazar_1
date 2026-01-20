@@ -24,9 +24,10 @@ export async function GET(
       }
     }
 
-    // Check if admin (simplified check - in production you'd want better admin auth)
-    const adminSession = request.cookies.get('admin_session')?.value
-    if (adminSession) {
+    // Check if admin (check Authorization header)
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const adminSession = authHeader.substring(7) // Remove 'Bearer ' prefix
       try {
         const adminData = JSON.parse(adminSession)
         if (adminData.email) {

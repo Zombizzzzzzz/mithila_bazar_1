@@ -69,10 +69,17 @@ export default function AdminMessagesPage() {
 
   const fetchChats = async () => {
     try {
-      const response = await fetch('/api/messages/admin/chats')
+      const session = localStorage.getItem('admin_session')
+      const response = await fetch('/api/messages/admin/chats', {
+        headers: {
+          'Authorization': `Bearer ${session}`,
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         setChats(data.chats)
+      } else {
+        console.error('Failed to fetch admin chats:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching chats:', error)
@@ -83,11 +90,18 @@ export default function AdminMessagesPage() {
 
   const fetchMessages = async (chat: Chat) => {
     try {
-      const response = await fetch(`/api/messages/${chat.product_id}/${chat.customer_id}`)
+      const session = localStorage.getItem('admin_session')
+      const response = await fetch(`/api/messages/${chat.product_id}/${chat.customer_id}`, {
+        headers: {
+          'Authorization': `Bearer ${session}`,
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         setMessages(data.messages)
         setSelectedChat(chat)
+      } else {
+        console.error('Failed to fetch messages:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -95,7 +109,17 @@ export default function AdminMessagesPage() {
   }
 
   const sendMessage = async () => {
-    if (!selectedChat || !newMessage.trim() || !adminId) return
+    if (!selectedChat || !newMessage.trim() || !adminId) {
+      console.log('Cannot send admin message:', { selectedChat, newMessage, adminId })
+      return
+    }
+
+    console.log('Sending admin message:', {
+      product_id: selectedChat.product_id,
+      message: newMessage.trim(),
+      admin_id: adminId,
+      customer_id: selectedChat.customer_id
+    })
 
     try {
       const response = await fetch('/api/messages/send', {
@@ -111,15 +135,22 @@ export default function AdminMessagesPage() {
         }),
       })
 
+      console.log('Admin send message response:', response.status, response.statusText)
+
       if (response.ok) {
+        const responseData = await response.json()
+        console.log('Admin message sent successfully:', responseData)
         setNewMessage('')
         // Refresh messages
         fetchMessages(selectedChat)
         // Refresh chats list
         fetchChats()
+      } else {
+        const errorData = await response.json()
+        console.error('Failed to send admin message:', errorData)
       }
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('Error sending admin message:', error)
     }
   }
 

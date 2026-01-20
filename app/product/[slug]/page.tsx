@@ -120,8 +120,8 @@ export default function ProductPage() {
 
   return (
     <main>
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+      <section className="container mx-auto px-4 py-8 md:py-12 lg:py-16">
+        <div className="grid grid-cols-1 gap-6 md:gap-8 lg:gap-12 lg:grid-cols-2">
           {/* Product Media Gallery */}
           <ProductMediaGallery
             imageUrl={product.image_url}
@@ -131,12 +131,12 @@ export default function ProductPage() {
           />
 
           {/* Product Details */}
-          <div className="flex flex-col gap-6">
-            <h1 className="font-serif text-4xl font-bold leading-tight text-foreground lg:text-5xl">{product.name}</h1>
+          <div className="flex flex-col gap-4 md:gap-6">
+            <h1 className="font-serif text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight text-foreground">{product.name}</h1>
 
-            <div className="flex items-center gap-4">
-              <span className="font-serif text-3xl font-bold text-foreground">रु {currentPrice.toFixed(2)}</span>
-              <Badge variant="secondary" className="text-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <span className="font-serif text-2xl md:text-3xl font-bold text-foreground">रु {currentPrice.toFixed(2)}</span>
+              <Badge variant="secondary" className="text-xs md:text-sm">
                 {currentStock > 0 ? `${currentStock} in stock${selectedVariant ? ` (${selectedVariant.color})` : ''}` : 'Out of stock'}
               </Badge>
             </div>
@@ -178,19 +178,24 @@ export default function ProductPage() {
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium">Size</label>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((size, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-1 border rounded-md text-sm ${
-                        selectedSize === size
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {product.sizes.map((size, index) => {
+                    const sizeObj = typeof size === 'string' ? { size, stock: product.stock } : (size as any)
+                    const sizeValue = typeof size === 'string' ? size : sizeObj.size
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedSize(sizeValue)}
+                        className={`px-3 py-1 border rounded-md text-sm ${
+                          selectedSize === sizeValue
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        title={sizeObj.stock !== undefined ? `${sizeObj.stock} in stock` : ''}
+                      >
+                        {sizeValue} {sizeObj.stock !== undefined && sizeObj.stock > 0 ? `(${sizeObj.stock})` : ''}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -206,10 +211,10 @@ export default function ProductPage() {
         </div>
       </section>
          {/* Visual separator */}
-            <div className="border-t border-gray-200 my-8"></div>
+            <div className="border-t border-gray-200 my-6 md:my-8"></div>
 
             {/* Order Form and Features */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 px-4 md:px-8 lg:px-20 py-8 md:py-12 lg:py-20">
               {/* Features */}
               {product.features && product.features.length > 0 && (
                 <div className="bg-white rounded-lg p-6 border border-gray-200">
@@ -241,11 +246,11 @@ export default function ProductPage() {
               </div>
             </div>
       {/* Reviews Section - moved up to reduce spacing */}
-      <section className="container mx-auto px-4 py-12">
+      <section className="container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-foreground mb-8">Customer Reviews</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 md:mb-8">Customer Reviews</h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
             <div className="lg:col-span-3">
               <ReviewsDisplay reviews={reviews} />
             </div>

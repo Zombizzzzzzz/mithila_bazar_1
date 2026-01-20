@@ -3,12 +3,13 @@ import { getAllCustomerChats } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check admin authentication (simplified)
-    const adminSession = request.cookies.get('admin_session')?.value
-    if (!adminSession) {
+    // Check admin authentication from Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Admin authentication required' }, { status: 401 })
     }
 
+    const adminSession = authHeader.substring(7) // Remove 'Bearer ' prefix
     try {
       const adminData = JSON.parse(adminSession)
       if (!adminData.email) {

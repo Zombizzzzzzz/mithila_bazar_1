@@ -20,7 +20,7 @@ interface BuyNowFormProps {
   selectedVariant?: { color: string; price: string | number } | null
   selectedSize?: string
   colorVariants?: { color: string; price: string | number; stock?: number }[]
-  sizes?: string[]
+  sizes?: { size: string; stock?: number }[] | string[]
   onOrderSuccess?: () => void
 }
 
@@ -31,6 +31,7 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
   const [freshProductData, setFreshProductData] = useState<{
     stock: number
     color_variants?: { color: string; price: string | number; stock?: number }[]
+    sizes?: { size: string; stock?: number }[]
   } | null>(null)
   const [formSelectedVariant, setFormSelectedVariant] = useState<{ color: string; price: string | number; stock?: number } | null>(selectedVariant || null)
   const [formSelectedSize, setFormSelectedSize] = useState<string>(selectedSize || '')
@@ -54,7 +55,16 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
             color_variants: product.color_variants?.map((v: any) => ({
               ...v,
               stock: typeof v.stock === 'number' ? v.stock : parseInt(String(v.stock || 0))
-            }))
+            })),
+            sizes: product.sizes?.map((s: any) => {
+              if (typeof s === 'string') {
+                return { size: s, stock: product.stock }
+              }
+              return {
+                ...s,
+                stock: typeof s.stock === 'number' ? s.stock : parseInt(String(s.stock || 0))
+              }
+            })
           })
         }
       } catch (error) {
@@ -65,10 +75,23 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
     fetchFreshProductData()
   }, [productId])
 
+  const normalizedSizes = sizes?.map(s => {
+    if (typeof s === 'string') {
+      return { size: s, stock: stock }
+    }
+    return s
+  }) || []
+
   const currentPrice = formSelectedVariant ? parseFloat(formSelectedVariant.price.toString()) : price
   const currentStock = freshProductData?.stock || stock
   const currentColorVariants = freshProductData?.color_variants || colorVariants
-  const availableStock = formSelectedVariant ? (currentColorVariants?.find(v => v.color === formSelectedVariant.color)?.stock ?? currentStock) : currentStock
+  const currentSizes = freshProductData?.sizes || normalizedSizes
+  
+  const availableStock = formSelectedVariant 
+    ? (currentColorVariants?.find(v => v.color === formSelectedVariant.color)?.stock ?? currentStock)
+    : formSelectedSize 
+      ? (currentSizes?.find(s => (s as any).size === formSelectedSize)?.stock ?? currentStock)
+      : currentStock
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -123,17 +146,17 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="w-full max-w-md mx-auto md:max-w-lg">
+      <CardHeader className="p-4 md:p-6">
+        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
           <Package className="h-5 w-5" />
           Buy Now - Cash on Delivery
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="customer_name" className="flex items-center gap-2">
+      <CardContent className="p-4 md:p-6">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+          <div className="space-y-1 md:space-y-2">
+            <Label htmlFor="customer_name" className="flex items-center gap-2 text-sm md:text-base">
               <User className="h-4 w-4" />
               Full Name
             </Label>
@@ -145,11 +168,12 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
               value={formData.customer_name}
               onChange={handleInputChange}
               placeholder="Enter your full name"
+              className="text-sm md:text-base"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="customer_phone" className="flex items-center gap-2">
+          <div className="space-y-1 md:space-y-2">
+            <Label htmlFor="customer_phone" className="flex items-center gap-2 text-sm md:text-base">
               <Phone className="h-4 w-4" />
               Phone Number
             </Label>
@@ -161,11 +185,12 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
               value={formData.customer_phone}
               onChange={handleInputChange}
               placeholder="Enter your phone number"
+              className="text-sm md:text-base"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="delivery_address" className="flex items-center gap-2">
+          <div className="space-y-1 md:space-y-2">
+            <Label htmlFor="delivery_address" className="flex items-center gap-2 text-sm md:text-base">
               <MapPin className="h-4 w-4" />
               Delivery Address
             </Label>
@@ -177,11 +202,12 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
               onChange={handleInputChange}
               placeholder="Enter your complete delivery address"
               rows={3}
+              className="text-sm md:text-base"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="delivery_city">City</Label>
+          <div className="space-y-1 md:space-y-2">
+            <Label htmlFor="delivery_city" className="text-sm md:text-base">City</Label>
             <Input
               id="delivery_city"
               name="delivery_city"
@@ -190,18 +216,19 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
               value={formData.delivery_city}
               onChange={handleInputChange}
               placeholder="Enter your city"
+              className="text-sm md:text-base"
             />
           </div>
 
           {/* Color Variant Selection */}
           {currentColorVariants && currentColorVariants.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="variant">Color Variant</Label>
+            <div className="space-y-1 md:space-y-2">
+              <Label htmlFor="variant" className="text-sm md:text-base">Color Variant</Label>
               <Select value={formSelectedVariant?.color || ''} onValueChange={(value) => {
                 const variant = currentColorVariants.find(v => v.color === value)
                 setFormSelectedVariant(variant || null)
               }}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm md:text-base">
                   <SelectValue placeholder="Select a color" />
                 </SelectTrigger>
                 <SelectContent>
@@ -216,26 +243,29 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
           )}
 
           {/* Size Selection */}
-          {sizes && sizes.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="size">Size</Label>
+          {currentSizes && currentSizes.length > 0 && (
+            <div className="space-y-1 md:space-y-2">
+              <Label htmlFor="size" className="text-sm md:text-base">Size</Label>
               <Select value={formSelectedSize} onValueChange={setFormSelectedSize}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm md:text-base">
                   <SelectValue placeholder="Select a size" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sizes.map((size) => (
-                    <SelectItem key={size} value={size}>
-                      {size}
-                    </SelectItem>
-                  ))}
+                  {currentSizes.map((size) => {
+                    const sizeObj = typeof size === 'string' ? { size, stock: currentStock } : size as any
+                    return (
+                      <SelectItem key={sizeObj.size} value={sizeObj.size}>
+                        {sizeObj.size} {sizeObj.stock !== undefined ? `(${sizeObj.stock} in stock)` : ''}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity</Label>
+          <div className="space-y-1 md:space-y-2">
+            <Label htmlFor="quantity" className="text-sm md:text-base">Quantity</Label>
             <Input
               id="quantity"
               name="quantity"
@@ -245,15 +275,16 @@ export function BuyNowForm({ productId, productName, price, stock, selectedVaria
               required
               value={formData.quantity}
               onChange={handleInputChange}
+              className="text-sm md:text-base"
             />
-            <p className="text-sm text-muted-foreground">
-              Available stock: {availableStock} {formSelectedVariant ? `(for ${formSelectedVariant.color})` : '(general)'} | Total: रु {(currentPrice * formData.quantity).toFixed(2)}
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Available stock: {availableStock} {formSelectedVariant ? `(for ${formSelectedVariant.color})` : formSelectedSize ? `(for size ${formSelectedSize})` : '(general)'} | Total: रु {(currentPrice * formData.quantity).toFixed(2)}
             </p>
           </div>
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full text-sm md:text-base py-2 md:py-3"
             disabled={isSubmitting || availableStock === 0}
           >
             {isSubmitting ? (

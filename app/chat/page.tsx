@@ -131,7 +131,18 @@ export default function ChatPage() {
   }
 
   const sendMessage = async () => {
-    if (!selectedChat || !newMessage.trim()) return
+    console.log('Send message called')
+    console.log('Session status:', status)
+    console.log('Session data:', session)
+    console.log('Selected chat:', selectedChat)
+    console.log('New message:', newMessage)
+
+    if (!selectedChat || !newMessage.trim()) {
+      console.log('Cannot send message: selectedChat or newMessage is empty', { selectedChat, newMessage })
+      return
+    }
+
+    console.log('Sending message:', { product_id: selectedChat.product_id, message: newMessage.trim() })
 
     try {
       const response = await fetch('/api/messages/send', {
@@ -145,7 +156,11 @@ export default function ChatPage() {
         }),
       })
 
+      console.log('Send message response:', response.status, response.statusText)
+
       if (response.ok) {
+        const responseData = await response.json()
+        console.log('Message sent successfully:', responseData)
         setNewMessage('')
         // Refresh chats list
         await fetchChats()
@@ -157,6 +172,7 @@ export default function ChatPage() {
             const customerData = await customerChatsResponse.json()
             const realChat = customerData.chats.find((chat: Chat) => chat.product_id === selectedChat.product_id)
             if (realChat) {
+              console.log('Found real chat:', realChat)
               setSelectedChat(realChat)
               fetchMessages(realChat)
               return
@@ -167,7 +183,8 @@ export default function ChatPage() {
         // For existing chats, just refresh messages
         fetchMessages(selectedChat)
       } else {
-        console.error('Failed to send message')
+        const errorData = await response.json()
+        console.error('Failed to send message:', errorData)
       }
     } catch (error) {
       console.error('Error sending message:', error)

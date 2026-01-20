@@ -34,7 +34,7 @@ export interface Product {
   created_at: Date
   is_mithila_thing?: boolean
   color_variants?: { color: string; price: string | number; stock?: number }[]
-  sizes?: string[]
+  sizes?: { size: string; stock?: number }[] | string[]
 }
 
 export interface Order {
