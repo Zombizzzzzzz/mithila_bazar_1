@@ -23,7 +23,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     <main>
       <section className="container mx-auto px-4 py-16">
         <div className="mb-12">
-          <h1 className="font-serif text-5xl font-bold text-foreground">{category.name}</h1>
+          <h1 className="font-serif text-5xl font-bold text-foreground">{category.slug === 'electronics' ? 'Gadget' : category.name}</h1>
           <p className="mt-3 text-lg leading-relaxed text-muted-foreground">{category.description}</p>
         </div>
 
@@ -31,7 +31,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <div className="mb-12">
           <GlobalSearch
             products={products}
-            placeholder={`Search within ${category.name}...`}
+            placeholder={`Search within ${category.slug === 'electronics' ? 'Gadget' : category.name}...`}
           />
         </div>
 

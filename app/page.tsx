@@ -49,7 +49,7 @@ export default async function HomePage() {
               <span className="block text-primary">Shopping Experience</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">
-              Curated collection of electronics, handcrafted treasures, luxury watches, and fashion-forward clothing
+              Curated collection of gadgets, handcrafted treasures, luxury watches, and fashion-forward clothing
             </p>
             <div className="mt-8 flex items-center justify-center gap-4">
               <Button size="lg" asChild>
@@ -74,7 +74,7 @@ export default async function HomePage() {
         </GSAPReveal>
 
         <GSAPReveal>
-          <GlobalSearch placeholder="Search electronics, hand-mades, watches, clothing..." />
+          <GlobalSearch placeholder="Search gadgets, hand-mades, watches, clothing..." />
         </GSAPReveal>
       </section>
 

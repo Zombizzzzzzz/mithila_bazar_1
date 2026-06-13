@@ -41,6 +41,8 @@ function EditProductForm() {
   const [newVariantColor, setNewVariantColor] = useState('')
   const [newVariantPrice, setNewVariantPrice] = useState('')
   const [newVariantStock, setNewVariantStock] = useState('')
+  const [newColor, setNewColor] = useState('')
+  const [newColorStock, setNewColorStock] = useState('')
   const [newSize, setNewSize] = useState('')
   const [newSizeStock, setNewSizeStock] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
@@ -131,6 +133,17 @@ function EditProductForm() {
         setNewVariantColor('')
         setNewVariantPrice('')
         setNewVariantStock('')
+      }
+    }
+  }
+
+  const addColor = () => {
+    if (newColor.trim() && newColorStock.trim()) {
+      const stockNum = parseInt(newColorStock)
+      if (!isNaN(stockNum) && stockNum >= 0) {
+        setFormData(prev => ({ ...prev, color_variants: [...prev.color_variants, { color: newColor.trim(), price: formData.price || '0', stock: newColorStock.trim() }] }))
+        setNewColor('')
+        setNewColorStock('')
       }
     }
   }
@@ -461,6 +474,50 @@ function EditProductForm() {
                         />
                         <Button type="button" variant="outline" size="sm" onClick={addSize}>
                           Add Size
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {categories.find(cat => cat.id.toString() === formData.category_id)?.slug === 'electronics' && (
+                  <div className="md:col-span-2">
+                    <Label>Colors (with stock)</Label>
+                    <div className="space-y-2">
+                      {formData.color_variants.map((variant, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={variant.color}
+                            onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, color: e.target.value } : v) }))}
+                            placeholder="Color"
+                          />
+                          <Input
+                            type="number"
+                            min="0"
+                            value={variant.stock || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, color_variants: prev.color_variants.map((v, i) => i === index ? { ...v, stock: e.target.value } : v) }))}
+                            placeholder="Stock"
+                          />
+                          <Button type="button" variant="outline" size="sm" onClick={() => removeVariant(index)}>
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={newColor}
+                          onChange={(e) => setNewColor(e.target.value)}
+                          placeholder="Color"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          value={newColorStock}
+                          onChange={(e) => setNewColorStock(e.target.value)}
+                          placeholder="Stock"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addColor}>
+                          Add Color
                         </Button>
                       </div>
                     </div>

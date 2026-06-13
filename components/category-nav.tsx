@@ -40,7 +40,7 @@ export async function CategoryNav() {
                     {Icon && <Icon className="h-6 w-6" />}
                   </div>
                   <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">
-                    {category.name}
+                    {category.slug === 'electronics' ? 'Gadget' : category.name}
                   </span>
                 </Link>
               )

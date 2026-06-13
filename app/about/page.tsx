@@ -8,7 +8,7 @@ export default function AboutPage() {
           <h1 className="font-serif text-5xl font-bold text-foreground">About Mithila Bazar</h1>
           <div className="mt-8 space-y-6 text-lg leading-relaxed text-muted-foreground">
             <p>
-              Welcome to Mithila Bazar, your premier destination for curated premium products across electronics,
+              Welcome to Mithila Bazar, your premier destination for curated premium products across gadgets,
               artisan crafts, luxury timepieces, and fashion-forward clothing.
             </p>
             <p>

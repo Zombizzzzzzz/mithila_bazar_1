@@ -24,7 +24,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Mithila Bazar - Premium Shopping Experience",
   description:
-    "Discover premium electronics, hand-made crafts, luxury watches, and fashion-forward clothing at Mithila Bazar",
+    "Discover premium gadgets, hand-made crafts, luxury watches, and fashion-forward clothing at Mithila Bazar",
   generator: "v0.app",
   icons: {
     icon: [
